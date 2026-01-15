@@ -33,6 +33,8 @@ main ──→ feature/xxx ──→ PR ──→ main ──→ prod
 - **Framework Preset**: Next.js
 - **環境変数**: Vercel管理画面で設定
   - `ANTHROPIC_API_KEY`: Claude APIキー
+  - `BASIC_AUTH_USERNAME`: ベーシック認証ユーザー名
+  - `BASIC_AUTH_PASSWORD`: ベーシック認証パスワード
 
 ### ディレクトリ構成
 
