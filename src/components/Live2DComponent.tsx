@@ -32,7 +32,6 @@ const setModelPosition = (
 }
 
 const Live2DComponent = (): JSX.Element => {
-
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasContainerRef = useRef<HTMLCanvasElement>(null)
   const [app, setApp] = useState<Application | null>(null)
