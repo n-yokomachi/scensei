@@ -42,6 +42,7 @@
   "DifyAPIKeyLabel": "Dify API Key",
   "DeepSeekAPIKeyLabel": "DeepSeek API Key",
   "APIKeyInstruction": "API keys can be obtained from the links below. Enter the obtained API key in the form.",
+  "APIKeyFromEnv": "API key is set from environment variables",
   "LocalLLMInfo": "You need to have a local LLM server running.",
   "LocalLLMInfo2": "Please enter the URL of your local LLM (including port number) and the model name.",
   "GroqInfo": "Groq API is accessed directly from the browser.",
