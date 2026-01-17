@@ -16,6 +16,11 @@ PRレビューで発見した、後回しにする課題を記載する。
 - **内容**: caniuse-liteのデータが8ヶ月古い警告
 - **対応案**: `npx update-browserslist-db@latest`
 
+### 背景画像の設定
+- **発見**: Phase2 UIテーマ・ブランディング
+- **内容**: 調香室/香水イメージの背景画像が未設定（`public/backgrounds/`に画像なし）
+- **対応案**: 著作権フリーの背景画像を用意し、`NEXT_PUBLIC_BACKGROUND_IMAGE_PATH`で設定
+
 ---
 
 ## 対応済み

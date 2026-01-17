@@ -210,7 +210,7 @@ interface General {
   multiModalMode: 'ai-decide' | 'always' | 'never'
   multiModalAiDecisionPrompt: string
   enableMultiModal: boolean
-  colorTheme: 'default' | 'cool' | 'mono' | 'ocean' | 'forest' | 'sunset'
+  colorTheme: 'scensei'
   customModel: boolean
 }
 
@@ -477,7 +477,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   initialSpeechTimeout:
     parseFloat(process.env.NEXT_PUBLIC_INITIAL_SPEECH_TIMEOUT || '5.0') || 5.0,
   chatLogWidth:
-    parseFloat(process.env.NEXT_PUBLIC_CHAT_LOG_WIDTH || '400') || 400,
+    parseFloat(process.env.NEXT_PUBLIC_CHAT_LOG_WIDTH || '550') || 550,
   imageDisplayPosition: (() => {
     const validPositions = ['input', 'side', 'icon'] as const
     const envPosition = process.env.NEXT_PUBLIC_IMAGE_DISPLAY_POSITION
@@ -496,14 +496,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_MULTIMODAL_AI_DECISION_PROMPT ||
     'あなたは画像がユーザーの質問や会話の文脈に関連するかどうかを判断するアシスタントです。直近の会話履歴とユーザーメッセージを考慮して、「はい」または「いいえ」のみで答えてください。',
   enableMultiModal: process.env.NEXT_PUBLIC_ENABLE_MULTIMODAL !== 'false',
-  colorTheme:
-    (process.env.NEXT_PUBLIC_COLOR_THEME as
-      | 'default'
-      | 'cool'
-      | 'mono'
-      | 'ocean'
-      | 'forest'
-      | 'sunset') || 'default',
+  colorTheme: 'scensei' as const,
 
   // Custom model toggle
   customModel: process.env.NEXT_PUBLIC_CUSTOM_MODEL === 'true',
