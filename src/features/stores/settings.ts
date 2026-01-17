@@ -257,10 +257,9 @@ const getInitialValuesFromEnv = (): SettingsState => ({
 
   // Model Provider
   selectAIService:
-    (process.env.NEXT_PUBLIC_SELECT_AI_SERVICE as AIService) || 'openai',
-  selectAIModel: migrateOpenAIModelName(
-    process.env.NEXT_PUBLIC_SELECT_AI_MODEL || 'gpt-4.1'
-  ),
+    (process.env.NEXT_PUBLIC_SELECT_AI_SERVICE as AIService) || 'anthropic',
+  selectAIModel:
+    process.env.NEXT_PUBLIC_SELECT_AI_MODEL || 'claude-haiku-4-5-20251101',
   localLlmUrl: process.env.NEXT_PUBLIC_LOCAL_LLM_URL || '',
   selectVoice: (process.env.NEXT_PUBLIC_SELECT_VOICE as AIVoice) || 'voicevox',
   koeiroParam: DEFAULT_PARAM,

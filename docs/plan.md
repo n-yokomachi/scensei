@@ -2,24 +2,24 @@
 
 ## プロジェクト概要
 
-| 項目 | 内容 |
-|------|------|
-| プロジェクト名 | **Scensei**（Scent + Sensei） |
-| コンセプト | 香水ソムリエAIキャラクター |
-| ベース | AITuber-kit |
-| 優先順位 | **フロントエンド → エージェント機能** |
+| 項目           | 内容                                  |
+| -------------- | ------------------------------------- |
+| プロジェクト名 | **Scensei**（Scent + Sensei）         |
+| コンセプト     | 香水ソムリエAIキャラクター            |
+| ベース         | AITuber-kit                           |
+| 優先順位       | **フロントエンド → エージェント機能** |
 
 ---
 
 ## 技術スタック
 
-| 項目 | 技術 |
-|------|------|
-| フロントエンド | Next.js (AITuber-kit内蔵) |
-| アバター | Live2D (Cubism SDK for Web) |
-| LLM | Claude API (Anthropic) |
-| スタイリング | Tailwind CSS (AITuber-kit内蔵) |
-| 音声 | なし（テキストチャットのみ） |
+| 項目           | 技術                           |
+| -------------- | ------------------------------ |
+| フロントエンド | Next.js (AITuber-kit内蔵)      |
+| アバター       | Live2D (Cubism SDK for Web)    |
+| LLM            | Claude API (Anthropic)         |
+| スタイリング   | Tailwind CSS (AITuber-kit内蔵) |
+| 音声           | なし（テキストチャットのみ）   |
 
 ---
 
@@ -56,13 +56,13 @@ npm run dev
 
 ```css
 :root {
-  --primary: #9D7E4A;        /* ゴールド */
-  --primary-light: #C9A96E;
-  --secondary: #5C4B7D;      /* パープル */
-  --background: #1A1A1A;     /* ダーク */
-  --surface: #2D2D2D;
-  --text: #F5F0E8;           /* クリーム */
-  --accent: #E8C4A0;         /* ローズゴールド */
+  --primary: #9d7e4a; /* ゴールド */
+  --primary-light: #c9a96e;
+  --secondary: #5c4b7d; /* パープル */
+  --background: #1a1a1a; /* ダーク */
+  --surface: #2d2d2d;
+  --text: #f5f0e8; /* クリーム */
+  --accent: #e8c4a0; /* ローズゴールド */
 }
 ```
 
@@ -126,7 +126,7 @@ const SCENSEI_SYSTEM_PROMPT = `
 [thinking] - 考え中、ヒアリング中
 [excited] - とっておきの香水を紹介する時
 [sympathetic] - 共感する時
-`;
+`
 ```
 
 ---
@@ -147,18 +147,18 @@ const SCENSEI_SYSTEM_PROMPT = `
 ```typescript
 // スプレッドシート検索ツール
 interface SpreadsheetSearchTool {
-  name: "search_perfume_database"
-  params: { 
+  name: 'search_perfume_database'
+  params: {
     mood?: string
     season?: string
     gender?: string
-    priceRange?: string 
+    priceRange?: string
   }
 }
 
 // Web検索ツール
 interface WebSearchTool {
-  name: "search_perfume_web"
+  name: 'search_perfume_web'
   params: { query: string }
 }
 ```

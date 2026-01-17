@@ -31,13 +31,10 @@ const modelDefinitions: Record<AIService, ModelInfo[]> = {
     { name: 'chatgpt-4o-latest', multiModal: true },
   ],
   anthropic: [
-    { name: 'claude-opus-4-1-20250805', multiModal: true },
-    { name: 'claude-opus-4-20250514', multiModal: true },
+    { name: 'claude-opus-4-5-20251101', multiModal: true },
+    { name: 'claude-sonnet-4-5-20250929', multiModal: true },
     { name: 'claude-sonnet-4-20250514', multiModal: true },
-    { name: 'claude-3-7-sonnet-20250219', multiModal: true },
-    { name: 'claude-3-5-sonnet-20241022', multiModal: true, isDefault: true },
-    { name: 'claude-3-5-sonnet-20240620', multiModal: true },
-    { name: 'claude-3-5-haiku-20241022', multiModal: true },
+    { name: 'claude-haiku-4-5-20251101', multiModal: true, isDefault: true },
   ],
   google: [
     { name: 'gemini-2.5-pro', multiModal: true },

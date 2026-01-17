@@ -20,13 +20,13 @@ ScenseiのブランドアイデンティティをUIに反映し、香水ソム�
 
 ```css
 :root {
-  --scensei-primary: #9D7E4A;        /* ゴールド */
-  --scensei-primary-light: #C9A96E;
-  --scensei-secondary: #5C4B7D;      /* パープル */
-  --scensei-background: #1A1A1A;     /* ダーク */
-  --scensei-surface: #2D2D2D;
-  --scensei-text: #F5F0E8;           /* クリーム */
-  --scensei-accent: #E8C4A0;         /* ローズゴールド */
+  --scensei-primary: #9d7e4a; /* ゴールド */
+  --scensei-primary-light: #c9a96e;
+  --scensei-secondary: #5c4b7d; /* パープル */
+  --scensei-background: #1a1a1a; /* ダーク */
+  --scensei-surface: #2d2d2d;
+  --scensei-text: #f5f0e8; /* クリーム */
+  --scensei-accent: #e8c4a0; /* ローズゴールド */
 }
 ```
 
