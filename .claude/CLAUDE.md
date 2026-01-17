@@ -64,7 +64,8 @@ docs/
 - **名前**: Scensei（Scent + Sensei）
 - **コンセプト**: 香水ソムリエAIキャラクター
 - **ベース**: AITuber-kit
-- **技術スタック**: Next.js, Live2D, Claude API, Tailwind CSS
+- **技術スタック**: Next.js, VRM (3Dモデル), Claude API, Tailwind CSS
+- **アバター**: VRM形式の3Dモデル（Live2Dではなく3Dを採用）
 
 ## 開発方針
 

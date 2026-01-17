@@ -16,7 +16,7 @@
 | 項目           | 技術                           |
 | -------------- | ------------------------------ |
 | フロントエンド | Next.js (AITuber-kit内蔵)      |
-| アバター       | Live2D (Cubism SDK for Web)    |
+| アバター       | VRM (3Dモデル)                 |
 | LLM            | Claude API (Anthropic)         |
 | スタイリング   | Tailwind CSS (AITuber-kit内蔵) |
 | 音声           | なし（テキストチャットのみ）   |
@@ -68,32 +68,28 @@ npm run dev
 
 ---
 
-### Phase 3: Live2Dアバター設定
+### Phase 3: 3Dアバター設定（VRM）
 
-- [ ] Live2Dモデル選定（無料モデル or 自作）
-- [ ] モデルファイル配置 (`public/live2d/scensei/`)
+- [ ] VRMモデル選定（無料モデル or 自作）
+- [ ] モデルファイル配置 (`public/vrm/`)
 - [ ] モデル読み込み設定
-- [ ] 表情パラメータ確認・調整
-- [ ] アイドルモーション設定
+- [ ] 表情（BlendShape）パラメータ確認・調整
+- [ ] アイドルアニメーション設定
 
-#### Live2Dモデル配置先
+#### VRMモデル配置先
 
 ```
 public/
-└── live2d/
-    └── scensei/
-        ├── scensei.model3.json
-        ├── scensei.moc3
-        ├── scensei.physics3.json
-        └── textures/
-            └── texture_00.png
+└── vrm/
+    └── scensei.vrm
 ```
 
-#### 無料モデル入手先
+#### 無料VRMモデル入手先
 
-- nizima: https://nizima.com/
-- Booth: https://booth.pm/ （Live2Dで検索）
-- AITuber-kit デフォルトモデルを流用
+- VRoid Hub: https://hub.vroid.com/
+- Booth: https://booth.pm/ （VRM フリーで検索）
+- VRoid Studio: https://vroid.com/studio （自作ツール）
+- AITuber-kit デフォルトVRMモデルを流用
 
 ---
 
@@ -193,11 +189,8 @@ scensei/
 ├── .env                          # APIキー
 ├── .env.example
 ├── public/
-│   ├── live2d/
-│   │   └── scensei/              # キャラモデル
-│   │       ├── scensei.model3.json
-│   │       ├── scensei.moc3
-│   │       └── textures/
+│   ├── vrm/
+│   │   └── scensei.vrm           # 3Dキャラモデル
 │   ├── bg/
 │   │   └── perfume_room.jpg      # 背景画像
 │   ├── favicon.ico
@@ -224,7 +217,7 @@ scensei/
    - タイトルが "Scensei"
    - カラーテーマ適用済み
    - 背景画像設定済み
-   - Live2Dキャラクターが表示される
+   - VRM 3Dキャラクターが表示される
    - テキストチャットでClaudeと会話できる
    - 感情タグに応じて表情が変わる
 ```
@@ -235,8 +228,9 @@ scensei/
 
 - AITuber-kit: https://github.com/tegnike/aituber-kit
 - AITuber-kit Docs: https://docs.aituberkit.com/
-- Live2D Cubism: https://www.live2d.com/
-- nizima（Live2Dモデル）: https://nizima.com/
+- VRoid Hub: https://hub.vroid.com/
+- VRoid Studio: https://vroid.com/studio
+- three-vrm: https://github.com/pixiv/three-vrm
 - Anthropic API: https://docs.anthropic.com/
 
 ---
@@ -246,9 +240,10 @@ scensei/
 ### ライセンス
 
 - AITuber-kit: 個人・非商用は無償、商用は要ライセンス
-- Live2D: 年間売上2,000万円以下は無償
+- VRM: オープンフォーマット（ライセンスフリー）
 
-### Live2Dモデル使用時
+### VRMモデル使用時
 
 - 各モデルの利用規約を確認すること
 - 商用利用可能かどうか要チェック
+- VRMファイル内のメタ情報でライセンス確認可能

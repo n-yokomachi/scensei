@@ -1,58 +1,44 @@
-import { useState, useEffect } from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import settingsStore from '@/features/stores/settings'
-import { GenericAIServiceConfig } from './modelProvider/GenericAIServiceConfig'
+import { ModelSelector } from './modelProvider/ModelSelector'
 import { useModelProviderState } from './modelProvider/hooks/useModelProviderState'
 import { useAIServiceHandlers } from './modelProvider/hooks/useAIServiceHandlers'
-import { getServiceConfigByKey } from './modelProvider/utils/aiServiceConfigs'
 
 const ModelProvider = () => {
   const { t } = useTranslation()
   const state = useModelProviderState()
   const { updateMultiModalModeForModel } = useAIServiceHandlers()
-  const [envApiKey, setEnvApiKey] = useState<string>('')
 
-  // 環境変数からAPIキーを取得（サーバーサイドで設定されている場合）
-  useEffect(() => {
-    const fetchEnvApiKey = async () => {
-      try {
-        const res = await fetch('/api/get-env-key?service=anthropic')
-        if (res.ok) {
-          const data = await res.json()
-          if (data.hasKey) {
-            setEnvApiKey(data.maskedKey)
-          }
-        }
-      } catch {
-        // エラー時は何もしない
-      }
-    }
-    fetchEnvApiKey()
-  }, [])
+  const handleModelChange = useCallback(
+    (model: string) => {
+      settingsStore.setState({ selectAIModel: model })
+      updateMultiModalModeForModel('anthropic', model)
+    },
+    [updateMultiModalModeForModel]
+  )
+
+  const handleCustomModelToggle = useCallback(() => {
+    settingsStore.setState({ customModel: !state.customModel })
+  }, [state.customModel])
+
+  const handleMultiModalToggle = useCallback(() => {
+    settingsStore.setState({ enableMultiModal: !state.enableMultiModal })
+  }, [state.enableMultiModal])
 
   if (state.externalLinkageMode) return null
 
-  const serviceConfigs = getServiceConfigByKey(t)
-  const config = serviceConfigs['anthropic']
-
-  // 環境変数のキーがある場合は表示用にマスク、なければstateのキーを使用
-  const displayApiKey = state.anthropicKey || envApiKey
-
   return (
     <div className="mt-6">
-      {envApiKey && !state.anthropicKey && (
-        <div className="my-4 p-3 bg-green-100 text-green-800 rounded-lg text-sm">
-          {t('APIKeyFromEnv') || 'APIキーは環境変数から設定されています'}
-        </div>
-      )}
-      <GenericAIServiceConfig
-        service="anthropic"
-        apiKey={displayApiKey}
-        selectAIModel={state.selectAIModel}
+      <ModelSelector
+        aiService="anthropic"
+        selectedModel={state.selectAIModel}
         customModel={state.customModel}
         enableMultiModal={state.enableMultiModal}
-        updateMultiModalModeForModel={updateMultiModalModeForModel}
-        config={config}
+        onModelChange={handleModelChange}
+        onCustomModelToggle={handleCustomModelToggle}
+        onMultiModalToggle={handleMultiModalToggle}
+        showMultiModalToggle={true}
       />
 
       <div className="my-6">
