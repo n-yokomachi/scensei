@@ -113,7 +113,10 @@ const Home = () => {
       <Meta />
       <Introduction />
       {/* 左上: チャットUI */}
-      <div className="overflow-hidden" style={{ gridColumn: '1', gridRow: '1' }}>
+      <div
+        className="overflow-hidden"
+        style={{ gridColumn: '1', gridRow: '1' }}
+      >
         <Menu />
       </div>
       {/* 右上: Live2Dビューワー */}
@@ -127,7 +130,9 @@ const Home = () => {
         {modelType === 'vrm' ? <VrmViewer /> : <Live2DViewer />}
       </div>
       {/* 下部: 入力欄（全幅） */}
-      <div style={{ gridColumn: '1 / -1', gridRow: '2' }}>
+      <div
+        style={{ gridColumn: '1 / -1', gridRow: '2' }}
+      >
         <Form />
       </div>
       <ModalImage />
