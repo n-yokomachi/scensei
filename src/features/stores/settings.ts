@@ -53,23 +53,7 @@ interface APIKeys {
   customApiIncludeMimeType: boolean
 }
 
-interface Live2DSettings {
-  neutralEmotions: string[]
-  happyEmotions: string[]
-  sadEmotions: string[]
-  angryEmotions: string[]
-  relaxedEmotions: string[]
-  surprisedEmotions: string[]
-  idleMotionGroup: string
-  neutralMotionGroup: string
-  happyMotionGroup: string
-  sadMotionGroup: string
-  angryMotionGroup: string
-  relaxedMotionGroup: string
-  surprisedMotionGroup: string
-}
-
-interface ModelProvider extends Live2DSettings {
+interface ModelProvider {
   selectAIService: AIService
   selectAIModel: string
   localLlmUrl: string
@@ -152,7 +136,6 @@ interface Character {
   showCharacterName: boolean
   systemPrompt: string
   selectedVrmPath: string
-  selectedLive2DPath: string
   fixedCharacterPosition: boolean
   characterPosition: {
     x: number
@@ -214,16 +197,11 @@ interface General {
   customModel: boolean
 }
 
-interface ModelType {
-  modelType: 'vrm' | 'live2d'
-}
-
 export type SettingsState = APIKeys &
   ModelProvider &
   Integrations &
   Character &
-  General &
-  ModelType
+  General
 
 // Function to get initial values from environment variables
 const getInitialValuesFromEnv = (): SettingsState => ({
@@ -367,17 +345,20 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   conversationContinuityMode: false,
 
   // Character
-  characterName: process.env.NEXT_PUBLIC_CHARACTER_NAME || 'CHARACTER',
+  characterName: process.env.NEXT_PUBLIC_CHARACTER_NAME || 'Scensei',
   characterPreset1: process.env.NEXT_PUBLIC_CHARACTER_PRESET1 || SYSTEM_PROMPT,
   characterPreset2: process.env.NEXT_PUBLIC_CHARACTER_PRESET2 || SYSTEM_PROMPT,
   characterPreset3: process.env.NEXT_PUBLIC_CHARACTER_PRESET3 || SYSTEM_PROMPT,
   characterPreset4: process.env.NEXT_PUBLIC_CHARACTER_PRESET4 || SYSTEM_PROMPT,
   characterPreset5: process.env.NEXT_PUBLIC_CHARACTER_PRESET5 || SYSTEM_PROMPT,
-  customPresetName1: process.env.NEXT_PUBLIC_CUSTOM_PRESET_NAME1 || 'Preset 1',
-  customPresetName2: process.env.NEXT_PUBLIC_CUSTOM_PRESET_NAME2 || 'Preset 2',
-  customPresetName3: process.env.NEXT_PUBLIC_CUSTOM_PRESET_NAME3 || 'Preset 3',
-  customPresetName4: process.env.NEXT_PUBLIC_CUSTOM_PRESET_NAME4 || 'Preset 4',
-  customPresetName5: process.env.NEXT_PUBLIC_CUSTOM_PRESET_NAME5 || 'Preset 5',
+  customPresetName1:
+    process.env.NEXT_PUBLIC_CUSTOM_PRESET_NAME1 || '香水ソムリエ',
+  customPresetName2:
+    process.env.NEXT_PUBLIC_CUSTOM_PRESET_NAME2 || 'カジュアル',
+  customPresetName3:
+    process.env.NEXT_PUBLIC_CUSTOM_PRESET_NAME3 || 'フォーマル',
+  customPresetName4: process.env.NEXT_PUBLIC_CUSTOM_PRESET_NAME4 || 'カスタム1',
+  customPresetName5: process.env.NEXT_PUBLIC_CUSTOM_PRESET_NAME5 || 'カスタム2',
   selectedPresetIndex: 0,
   showAssistantText:
     process.env.NEXT_PUBLIC_SHOW_ASSISTANT_TEXT === 'true' ? true : false,
@@ -388,10 +369,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_CHARACTER_PRESET1 ||
     SYSTEM_PROMPT,
   selectedVrmPath:
-    process.env.NEXT_PUBLIC_SELECTED_VRM_PATH || '/vrm/nikechan_v1.vrm',
-  selectedLive2DPath:
-    process.env.NEXT_PUBLIC_SELECTED_LIVE2D_PATH ||
-    '/live2d/nike01/nike01.model3.json',
+    process.env.NEXT_PUBLIC_SELECTED_VRM_PATH || '/vrm/Scensei.vrm',
   fixedCharacterPosition: false,
   characterPosition: {
     x: 0,
@@ -510,25 +488,6 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   nijivoiceSoundDuration:
     parseFloat(process.env.NEXT_PUBLIC_NIJIVOICE_SOUND_DURATION || '0.1') ||
     0.1,
-
-  // Settings
-  modelType: (process.env.NEXT_PUBLIC_MODEL_TYPE as 'vrm' | 'live2d') || 'vrm',
-
-  // Live2D settings
-  neutralEmotions: process.env.NEXT_PUBLIC_NEUTRAL_EMOTIONS?.split(',') || [],
-  happyEmotions: process.env.NEXT_PUBLIC_HAPPY_EMOTIONS?.split(',') || [],
-  sadEmotions: process.env.NEXT_PUBLIC_SAD_EMOTIONS?.split(',') || [],
-  angryEmotions: process.env.NEXT_PUBLIC_ANGRY_EMOTIONS?.split(',') || [],
-  relaxedEmotions: process.env.NEXT_PUBLIC_RELAXED_EMOTIONS?.split(',') || [],
-  surprisedEmotions:
-    process.env.NEXT_PUBLIC_SURPRISED_EMOTIONS?.split(',') || [],
-  idleMotionGroup: process.env.NEXT_PUBLIC_IDLE_MOTION_GROUP || '',
-  neutralMotionGroup: process.env.NEXT_PUBLIC_NEUTRAL_MOTION_GROUP || '',
-  happyMotionGroup: process.env.NEXT_PUBLIC_HAPPY_MOTION_GROUP || '',
-  sadMotionGroup: process.env.NEXT_PUBLIC_SAD_MOTION_GROUP || '',
-  angryMotionGroup: process.env.NEXT_PUBLIC_ANGRY_MOTION_GROUP || '',
-  relaxedMotionGroup: process.env.NEXT_PUBLIC_RELAXED_MOTION_GROUP || '',
-  surprisedMotionGroup: process.env.NEXT_PUBLIC_SURPRISED_MOTION_GROUP || '',
 })
 
 const settingsStore = create<SettingsState>()(
@@ -550,6 +509,14 @@ const settingsStore = create<SettingsState>()(
       ) {
         const envValues = getInitialValuesFromEnv()
         Object.assign(state, envValues)
+      }
+
+      // Refresh character name if it's old default
+      if (state) {
+        const envValues = getInitialValuesFromEnv()
+        if (state.characterName === 'CHARACTER' || !state.characterName) {
+          state.characterName = envValues.characterName
+        }
       }
     },
     partialize: (state) => ({
@@ -618,20 +585,10 @@ const settingsStore = create<SettingsState>()(
       difyConversationId: state.difyConversationId,
       youtubeLiveId: state.youtubeLiveId,
       characterName: state.characterName,
-      characterPreset1: state.characterPreset1,
-      characterPreset2: state.characterPreset2,
-      characterPreset3: state.characterPreset3,
-      characterPreset4: state.characterPreset4,
-      characterPreset5: state.characterPreset5,
-      customPresetName1: state.customPresetName1,
-      customPresetName2: state.customPresetName2,
-      customPresetName3: state.customPresetName3,
-      customPresetName4: state.customPresetName4,
-      customPresetName5: state.customPresetName5,
-      selectedPresetIndex: state.selectedPresetIndex,
+      // プロンプト関連はローカルストレージに保存しない（常にデフォルト値を使用）
+      // characterPreset1-5, customPresetName1-5, selectedPresetIndex, systemPrompt は除外
       showAssistantText: state.showAssistantText,
       showCharacterName: state.showCharacterName,
-      systemPrompt: state.systemPrompt,
       selectLanguage: state.selectLanguage,
       changeEnglishToJapanese: state.changeEnglishToJapanese,
       includeTimestampInUserMessage: state.includeTimestampInUserMessage,
@@ -651,7 +608,6 @@ const settingsStore = create<SettingsState>()(
       azureTTSKey: state.azureTTSKey,
       azureTTSEndpoint: state.azureTTSEndpoint,
       selectedVrmPath: state.selectedVrmPath,
-      selectedLive2DPath: state.selectedLive2DPath,
       fixedCharacterPosition: state.fixedCharacterPosition,
       characterPosition: state.characterPosition,
       characterRotation: state.characterRotation,
@@ -661,20 +617,6 @@ const settingsStore = create<SettingsState>()(
       nijivoiceSpeed: state.nijivoiceSpeed,
       nijivoiceEmotionalLevel: state.nijivoiceEmotionalLevel,
       nijivoiceSoundDuration: state.nijivoiceSoundDuration,
-      modelType: state.modelType,
-      neutralEmotions: state.neutralEmotions,
-      happyEmotions: state.happyEmotions,
-      sadEmotions: state.sadEmotions,
-      angryEmotions: state.angryEmotions,
-      relaxedEmotions: state.relaxedEmotions,
-      surprisedEmotions: state.surprisedEmotions,
-      idleMotionGroup: state.idleMotionGroup,
-      neutralMotionGroup: state.neutralMotionGroup,
-      happyMotionGroup: state.happyMotionGroup,
-      sadMotionGroup: state.sadMotionGroup,
-      angryMotionGroup: state.angryMotionGroup,
-      relaxedMotionGroup: state.relaxedMotionGroup,
-      surprisedMotionGroup: state.surprisedMotionGroup,
       maxPastMessages: state.maxPastMessages,
       useVideoAsBackground: state.useVideoAsBackground,
       showQuickMenu: state.showQuickMenu,

@@ -2,12 +2,10 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Form } from '@/components/form'
 import MessageReceiver from '@/components/messageReceiver'
-import { Introduction } from '@/components/introduction'
 import { Menu } from '@/components/menu'
 import { Meta } from '@/components/meta'
 import ModalImage from '@/components/modalImage'
 import VrmViewer from '@/components/vrmViewer'
-import Live2DViewer from '@/components/live2DViewer'
 import { Toasts } from '@/components/toasts'
 import { WebSocketManager } from '@/components/websocketManager'
 import CharacterPresetMenu from '@/components/characterPresetMenu'
@@ -31,7 +29,6 @@ const Home = () => {
         ? ''
         : `url(${buildUrl(backgroundImageUrl)})`
   const messageReceiverEnabled = settingsStore((s) => s.messageReceiverEnabled)
-  const modelType = settingsStore((s) => s.modelType)
   const { t } = useTranslation()
   const characterPresets = [
     {
@@ -111,7 +108,6 @@ const Home = () => {
       }}
     >
       <Meta />
-      <Introduction />
       {/* 左上: チャットUI */}
       <div
         className="overflow-hidden"
@@ -119,7 +115,7 @@ const Home = () => {
       >
         <Menu />
       </div>
-      {/* 右上: Live2Dビューワー */}
+      {/* 右上: VRMビューワー */}
       <div
         className="overflow-hidden"
         style={{
@@ -127,7 +123,7 @@ const Home = () => {
           gridRow: '1',
         }}
       >
-        {modelType === 'vrm' ? <VrmViewer /> : <Live2DViewer />}
+        <VrmViewer />
       </div>
       {/* 下部: 入力欄（全幅） */}
       <div style={{ gridColumn: '1 / -1', gridRow: '2' }}>

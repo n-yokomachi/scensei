@@ -56,12 +56,7 @@ public/scripts/*
 
 # VRM files
 /public/vrm/*
-!/public/vrm/AvatarSample_A.vrm
-!/public/vrm/AvatarSample_B.vrm
-!/public/vrm/AvatarSample_C.vrm
-!/public/vrm/nikechan_v1.vrm
-!/public/vrm/nikechan_v2.vrm
-!/public/vrm/nikechan_v2_outerwear.vrm
+!/public/vrm/Scensei.vrm
 
 # Background files
 /public/backgrounds/*
