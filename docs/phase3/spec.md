@@ -6,11 +6,11 @@ Scenseiの香水ソムリエとしてのキャラクター性を表現するVRM 
 
 ## 完了条件
 
-- [ ] VRMモデルの選定・入手
-- [ ] モデルファイルを`public/vrm/`に配置
-- [ ] モデル読み込み設定の更新
-- [ ] 表情（BlendShape）がAIの感情タグと連動している
-- [ ] アイドルアニメーション（待機時の動き）が動作している
+- [x] VRMモデルの選定・入手（AITuber-kitデフォルト`nikechan_v2.vrm`を使用）
+- [x] モデルファイルを`public/vrm/`に配置（既存モデル6つあり）
+- [x] モデル読み込み設定の更新（`.env`にVRM設定追加済み）
+- [x] 表情（BlendShape）がAIの感情タグと連動している（`expressionController.ts`で実装済み）
+- [x] アイドルアニメーション（待機時の動き）が動作している（`autoBlink.ts`, `idle_loop.vrma`で実装済み）
 
 ## VRMとは
 

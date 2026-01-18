@@ -4,18 +4,15 @@ import { persist } from 'zustand/middleware'
 import { Message } from '@/features/messages/messages'
 import { Viewer } from '../vrmViewer/viewer'
 import { messageSelectors } from '../messages/messageSelectors'
-import { Live2DModel } from 'pixi-live2d-display-lipsyncpatch'
 import { generateMessageId } from '@/utils/messageUtils'
 
 export interface PersistedState {
   userOnboarded: boolean
   chatLog: Message[]
-  showIntroduction: boolean
 }
 
 export interface TransientState {
   viewer: Viewer
-  live2dViewer: any
   slideMessages: string[]
   chatProcessing: boolean
   chatProcessingCount: number
@@ -27,10 +24,6 @@ export interface TransientState {
   triggerShutter: boolean
   webcamStatus: boolean
   captureStatus: boolean
-  isCubismCoreLoaded: boolean
-  setIsCubismCoreLoaded: (loaded: boolean) => void
-  isLive2dLoaded: boolean
-  setIsLive2dLoaded: (loaded: boolean) => void
   isSpeaking: boolean
 }
 
@@ -59,11 +52,9 @@ const homeStore = create<HomeState>()(
       // persisted states
       userOnboarded: false,
       chatLog: [],
-      showIntroduction: process.env.NEXT_PUBLIC_SHOW_INTRODUCTION !== 'false',
 
       // transient states
       viewer: new Viewer(),
-      live2dViewer: null,
       slideMessages: [],
       chatProcessing: false,
       chatProcessingCount: 0,
@@ -124,18 +115,12 @@ const homeStore = create<HomeState>()(
       triggerShutter: false,
       webcamStatus: false,
       captureStatus: false,
-      isCubismCoreLoaded: false,
-      setIsCubismCoreLoaded: (loaded) =>
-        set(() => ({ isCubismCoreLoaded: loaded })),
-      isLive2dLoaded: false,
-      setIsLive2dLoaded: (loaded) => set(() => ({ isLive2dLoaded: loaded })),
       isSpeaking: false,
     }),
     {
       name: 'aitube-kit-home',
-      partialize: ({ chatLog, showIntroduction }) => ({
+      partialize: ({ chatLog }) => ({
         chatLog: messageSelectors.cutImageMessage(chatLog),
-        showIntroduction,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

@@ -54,6 +54,13 @@ export class ExpressionController {
     if (this._currentLipSync) {
       this._expressionManager?.setValue(this._currentLipSync.preset, 0)
     }
+
+    // value が 0 の場合は口を閉じる（リップシンクを無効化）
+    if (value === 0) {
+      this._currentLipSync = null
+      return
+    }
+
     this._currentLipSync = {
       preset,
       value,

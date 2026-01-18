@@ -1,7 +1,5 @@
 import { Talk } from './messages'
 import homeStore from '@/features/stores/home'
-import settingsStore from '@/features/stores/settings'
-import { Live2DHandler } from './live2dHandler'
 
 type SpeakTask = {
   sessionId: string
@@ -58,12 +56,7 @@ export class SpeakQueue {
     SpeakQueue.stopTokenCounter++
     instance.clearQueue()
     const hs = homeStore.getState()
-    const ss = settingsStore.getState()
-    if (ss.modelType === 'live2d') {
-      Live2DHandler.stopSpeaking()
-    } else {
-      hs.viewer.model?.stopSpeaking()
-    }
+    hs.viewer.model?.stopSpeaking()
     homeStore.setState({ isSpeaking: false })
   }
 
@@ -89,7 +82,6 @@ export class SpeakQueue {
 
     this.isProcessing = true
     const hs = homeStore.getState()
-    const ss = settingsStore.getState()
 
     // isSpeaking はループ内部で最新値を参照するため、ここでは条件に含めない
     while (this.queue.length > 0) {
@@ -114,11 +106,7 @@ export class SpeakQueue {
         }
         try {
           const { audioBuffer, talk, isNeedDecode, onComplete } = task
-          if (ss.modelType === 'live2d') {
-            await Live2DHandler.speak(audioBuffer, talk, isNeedDecode)
-          } else {
-            await hs.viewer.model?.speak(audioBuffer, talk, isNeedDecode)
-          }
+          await hs.viewer.model?.speak(audioBuffer, talk, isNeedDecode)
           onComplete?.()
         } catch (error) {
           console.error(
@@ -154,12 +142,7 @@ export class SpeakQueue {
 
     if (this.shouldResetToNeutral(initialLength)) {
       const hs = homeStore.getState()
-      const ss = settingsStore.getState()
-      if (ss.modelType === 'live2d') {
-        await Live2DHandler.resetToIdle()
-      } else {
-        await hs.viewer.model?.playEmotion('neutral')
-      }
+      await hs.viewer.model?.playEmotion('neutral')
     }
   }
 
