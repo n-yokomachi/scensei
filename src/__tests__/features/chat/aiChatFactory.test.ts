@@ -1,20 +1,10 @@
 import { getAIChatResponseStream } from '../../../features/chat/aiChatFactory'
 import { getVercelAIChatResponseStream } from '../../../features/chat/vercelAIChat'
-import { getDifyChatResponseStream } from '../../../features/chat/difyChat'
-import { getOpenAIAudioChatResponseStream } from '../../../features/chat/openAIAudioChat'
 import settingsStore from '../../../features/stores/settings'
 import { Message } from '../../../features/messages/messages'
 
 jest.mock('../../../features/chat/vercelAIChat', () => ({
   getVercelAIChatResponseStream: jest.fn(),
-}))
-
-jest.mock('../../../features/chat/difyChat', () => ({
-  getDifyChatResponseStream: jest.fn(),
-}))
-
-jest.mock('../../../features/chat/openAIAudioChat', () => ({
-  getOpenAIAudioChatResponseStream: jest.fn(),
 }))
 
 jest.mock('../../../features/stores/settings', () => ({
@@ -38,22 +28,6 @@ describe('aiChatFactory', () => {
       },
     })
   }
-
-  it('OpenAIオーディオモードの場合、getOpenAIAudioChatResponseStreamを呼び出す', async () => {
-    const mockStream = createMockStream()
-    ;(getOpenAIAudioChatResponseStream as jest.Mock).mockResolvedValue(
-      mockStream
-    )
-    ;(settingsStore.getState as jest.Mock).mockReturnValue({
-      selectAIService: 'openai',
-      audioMode: true,
-    })
-
-    const result = await getAIChatResponseStream(testMessages)
-
-    expect(getOpenAIAudioChatResponseStream).toHaveBeenCalledWith(testMessages)
-    expect(result).toBe(mockStream)
-  })
 
   it('Vercel AI SDKをサポートするサービスの場合、getVercelAIChatResponseStreamを呼び出す', async () => {
     const aiServices = [
@@ -83,7 +57,6 @@ describe('aiChatFactory', () => {
       )
       ;(settingsStore.getState as jest.Mock).mockReturnValue({
         selectAIService: service,
-        audioMode: false,
       })
 
       const result = await getAIChatResponseStream(testMessages)
@@ -93,32 +66,9 @@ describe('aiChatFactory', () => {
     }
   })
 
-  it('Difyサービスの場合、getDifyChatResponseStreamを呼び出す', async () => {
-    const mockStream = createMockStream()
-    ;(getDifyChatResponseStream as jest.Mock).mockResolvedValue(mockStream)
-    ;(settingsStore.getState as jest.Mock).mockReturnValue({
-      selectAIService: 'dify',
-      audioMode: false,
-      difyKey: 'test-key',
-      difyUrl: 'https://test-url',
-      difyConversationId: 'test-conversation-id',
-    })
-
-    const result = await getAIChatResponseStream(testMessages)
-
-    expect(getDifyChatResponseStream).toHaveBeenCalledWith(
-      testMessages,
-      'test-key',
-      'https://test-url',
-      'test-conversation-id'
-    )
-    expect(result).toBe(mockStream)
-  })
-
   it('サポートされていないAIサービスの場合、エラーをスローする', async () => {
     ;(settingsStore.getState as jest.Mock).mockReturnValue({
       selectAIService: 'unsupported-service',
-      audioMode: false,
     })
 
     await expect(getAIChatResponseStream(testMessages)).rejects.toThrow(

@@ -13,7 +13,6 @@ export interface PersistedState {
 
 export interface TransientState {
   viewer: Viewer
-  slideMessages: string[]
   chatProcessing: boolean
   chatProcessingCount: number
   incrementChatProcessingCount: () => void
@@ -23,7 +22,6 @@ export interface TransientState {
   modalImage: string
   triggerShutter: boolean
   webcamStatus: boolean
-  captureStatus: boolean
   isSpeaking: boolean
 }
 
@@ -55,7 +53,6 @@ const homeStore = create<HomeState>()(
 
       // transient states
       viewer: new Viewer(),
-      slideMessages: [],
       chatProcessing: false,
       chatProcessingCount: 0,
       incrementChatProcessingCount: () => {
@@ -114,7 +111,6 @@ const homeStore = create<HomeState>()(
       modalImage: '',
       triggerShutter: false,
       webcamStatus: false,
-      captureStatus: false,
       isSpeaking: false,
     }),
     {

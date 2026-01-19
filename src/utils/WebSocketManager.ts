@@ -117,7 +117,7 @@ export class WebSocketManager {
 
   public reconnect(): boolean {
     const ss = settingsStore.getState()
-    if (!ss.realtimeAPIMode || !ss.selectAIService) return false
+    if (!ss.selectAIService) return false
 
     this.disconnect()
     this.connect()

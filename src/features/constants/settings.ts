@@ -1,9 +1,3 @@
-import {
-  openAITTSModels,
-  openAIWhisperModels,
-  openAIRealtimeModels,
-} from './aiModels'
-
 export type VercelCloudAIService =
   | 'openai'
   | 'anthropic'
@@ -58,9 +52,7 @@ export const isVercelLocalAIService = (
   return localServices.includes(service as VercelLocalAIService)
 }
 
-export type DifyService = 'dify'
-
-export type AIService = VercelAIService | DifyService
+export type AIService = VercelAIService
 
 export interface AIServiceConfig {
   openai: { key: string; model: string }
@@ -76,27 +68,8 @@ export interface AIServiceConfig {
   perplexity: { key: string; model: string }
   fireworks: { key: string; model: string }
   openrouter: { key: string; model: string }
-  dify: {
-    key: string
-    url: string
-    conversationId: string
-  }
   deepseek: { key: string; model: string }
 }
-
-export type AIVoice =
-  | 'koeiromap'
-  | 'google'
-  | 'voicevox'
-  | 'stylebertvits2'
-  | 'aivis_speech'
-  | 'aivis_cloud_api'
-  | 'nijivoice'
-  | 'gsvitts'
-  | 'elevenlabs'
-  | 'cartesia'
-  | 'openai'
-  | 'azure'
 
 export type Language = (typeof LANGUAGES)[number]
 
@@ -104,49 +77,3 @@ export const LANGUAGES = ['ja', 'en'] as const
 
 export const isLanguageSupported = (language: string): language is Language =>
   LANGUAGES.includes(language as Language)
-
-export type VoiceLanguage = 'ja-JP' | 'en-US'
-
-export type OpenAITTSVoice =
-  | 'alloy'
-  | 'ash'
-  | 'ballad'
-  | 'coral'
-  | 'echo'
-  | 'fable'
-  | 'onyx'
-  | 'nova'
-  | 'sage'
-  | 'shimmer'
-export type OpenAITTSModel = (typeof openAITTSModels)[number]
-
-export type RealtimeAPIModeModel = (typeof openAIRealtimeModels)[number]
-export type RealtimeAPIModeContentType = 'input_text' | 'input_audio'
-export type RealtimeAPIModeVoice =
-  | 'alloy'
-  | 'ash'
-  | 'ballad'
-  | 'coral'
-  | 'echo'
-  | 'sage'
-  | 'shimmer'
-  | 'verse'
-export type RealtimeAPIModeAzureVoice =
-  | 'alloy'
-  | 'amuch'
-  | 'breeze'
-  | 'cove'
-  | 'dan'
-  | 'echo'
-  | 'elan'
-  | 'ember'
-  | 'jupiter'
-  | 'marilyn'
-  | 'shimmer'
-
-export type AudioModeModel = string
-export type AudioModeInputType = 'input_text' | 'input_audio'
-
-export type SpeechRecognitionMode = 'browser' | 'whisper'
-
-export type WhisperTranscriptionModel = (typeof openAIWhisperModels)[number]

@@ -4,14 +4,6 @@ import { isMultiModalModelWithToggle } from '@/features/constants/aiModels'
 
 export const useModelProviderState = () => {
   const externalLinkageMode = settingsStore((s) => s.externalLinkageMode)
-  const realtimeAPIMode = settingsStore((s) => s.realtimeAPIMode)
-  const realtimeAPIModeContentType = settingsStore(
-    (s) => s.realtimeAPIModeContentType
-  )
-  const realtimeAPIModeVoice = settingsStore((s) => s.realtimeAPIModeVoice)
-  const audioMode = settingsStore((s) => s.audioMode)
-  const audioModeInputType = settingsStore((s) => s.audioModeInputType)
-  const audioModeVoice = settingsStore((s) => s.audioModeVoice)
   const openaiKey = settingsStore((s) => s.openaiKey)
   const anthropicKey = settingsStore((s) => s.anthropicKey)
   const googleKey = settingsStore((s) => s.googleKey)
@@ -23,7 +15,6 @@ export const useModelProviderState = () => {
   const mistralaiKey = settingsStore((s) => s.mistralaiKey)
   const perplexityKey = settingsStore((s) => s.perplexityKey)
   const fireworksKey = settingsStore((s) => s.fireworksKey)
-  const difyKey = settingsStore((s) => s.difyKey)
   const useSearchGrounding = settingsStore((s) => s.useSearchGrounding)
   const dynamicRetrievalThreshold = settingsStore(
     (s) => s.dynamicRetrievalThreshold
@@ -43,7 +34,6 @@ export const useModelProviderState = () => {
   const localLlmUrl = settingsStore((s) => s.localLlmUrl)
   const imageDisplayPosition = settingsStore((s) => s.imageDisplayPosition)
   const customModel = settingsStore((s) => s.customModel)
-  const difyUrl = settingsStore((s) => s.difyUrl)
   const customApiUrl = settingsStore((s) => s.customApiUrl)
   const customApiHeaders = settingsStore((s) => s.customApiHeaders)
   const customApiBody = settingsStore((s) => s.customApiBody)
@@ -68,12 +58,6 @@ export const useModelProviderState = () => {
 
   return {
     externalLinkageMode,
-    realtimeAPIMode,
-    realtimeAPIModeContentType,
-    realtimeAPIModeVoice,
-    audioMode,
-    audioModeInputType,
-    audioModeVoice,
     openaiKey,
     anthropicKey,
     googleKey,
@@ -85,7 +69,6 @@ export const useModelProviderState = () => {
     mistralaiKey,
     perplexityKey,
     fireworksKey,
-    difyKey,
     useSearchGrounding,
     dynamicRetrievalThreshold,
     deepseekKey,
@@ -101,7 +84,6 @@ export const useModelProviderState = () => {
     localLlmUrl,
     imageDisplayPosition,
     customModel,
-    difyUrl,
     customApiUrl,
     customApiHeaders,
     customApiBody,

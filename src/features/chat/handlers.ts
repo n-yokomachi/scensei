@@ -1,11 +1,8 @@
 import { getAIChatResponseStream } from '@/features/chat/aiChatFactory'
 import { Message, EmotionType } from '@/features/messages/messages'
 import { speakCharacter } from '@/features/messages/speakCharacter'
-import { judgeSlide } from '@/features/slide/slideAIHelpers'
 import homeStore from '@/features/stores/home'
 import settingsStore from '@/features/stores/settings'
-import slideStore from '@/features/stores/slide'
-import { goToSlide } from '@/components/slides'
 import { messageSelectors } from '../messages/messageSelectors'
 import webSocketStore from '@/features/stores/websocketStore'
 import i18next from 'i18next'
@@ -162,14 +159,12 @@ const extractSentence = (
  * @param sentence 発話する文
  * @param emotionTag 感情タグ (例: "[neutral]")
  * @param currentAssistantMessageListRef アシスタントメッセージリストの参照
- * @param currentSlideMessagesRef スライドメッセージリストの参照
  */
 const handleSpeakAndStateUpdate = (
   sessionId: string,
   sentence: string,
   emotionTag: string,
-  currentAssistantMessageListRef: { current: string[] },
-  currentSlideMessagesRef: { current: string[] }
+  currentAssistantMessageListRef: { current: string[] }
 ) => {
   const hs = homeStore.getState()
   const emotion = emotionTag.includes('[')
@@ -192,17 +187,9 @@ const handleSpeakAndStateUpdate = (
     { message: sentence, emotion: emotion },
     () => {
       hs.incrementChatProcessingCount()
-      currentSlideMessagesRef.current.push(sentence)
-      homeStore.setState({
-        slideMessages: [...currentSlideMessagesRef.current],
-      })
     },
     () => {
       hs.decrementChatProcessingCount()
-      currentSlideMessagesRef.current.shift()
-      homeStore.setState({
-        slideMessages: [...currentSlideMessagesRef.current],
-      })
     }
   )
 }
@@ -213,7 +200,6 @@ const handleSpeakAndStateUpdate = (
  */
 export const speakMessageHandler = async (receivedMessage: string) => {
   const sessionId = generateSessionId()
-  const currentSlideMessagesRef = { current: [] as string[] }
   const assistantMessageListRef = { current: [] as string[] }
 
   let isCodeBlock: boolean = false
@@ -284,8 +270,7 @@ export const speakMessageHandler = async (receivedMessage: string) => {
             sessionId,
             sentence,
             emotionTag,
-            assistantMessageListRef,
-            currentSlideMessagesRef
+            assistantMessageListRef
           )
           localRemaining = textAfterSentence
         } else {
@@ -300,8 +285,7 @@ export const speakMessageHandler = async (receivedMessage: string) => {
               sessionId,
               finalSentence,
               emotionTag,
-              assistantMessageListRef,
-              currentSlideMessagesRef
+              assistantMessageListRef
             )
             localRemaining = ''
           } else {
@@ -324,8 +308,7 @@ export const speakMessageHandler = async (receivedMessage: string) => {
             sessionId,
             finalSentence,
             '',
-            assistantMessageListRef,
-            currentSlideMessagesRef
+            assistantMessageListRef
           )
           break
         }
@@ -371,7 +354,6 @@ export const processAIResponse = async (messages: Message[]) => {
   homeStore.setState({ chatProcessing: true })
   let stream
 
-  const currentSlideMessagesRef = { current: [] as string[] }
   const assistantMessageListRef = { current: [] as string[] }
 
   try {
@@ -514,8 +496,7 @@ export const processAIResponse = async (messages: Message[]) => {
                   sessionId,
                   sentence,
                   currentEmotionTag,
-                  assistantMessageListRef,
-                  currentSlideMessagesRef
+                  assistantMessageListRef
                 )
                 textToProcessBeforeCode = textAfterSentence
                 if (!textAfterSentence) currentEmotionTag = ''
@@ -564,8 +545,7 @@ export const processAIResponse = async (messages: Message[]) => {
                 sessionId,
                 sentence,
                 currentEmotionTag,
-                assistantMessageListRef,
-                currentSlideMessagesRef
+                assistantMessageListRef
               )
               processableTextForSpeech = textAfterSentence
               if (!textAfterSentence) currentEmotionTag = ''
@@ -605,8 +585,7 @@ export const processAIResponse = async (messages: Message[]) => {
               sessionId,
               finalText,
               currentEmotionTag,
-              assistantMessageListRef,
-              currentSlideMessagesRef
+              assistantMessageListRef
             )
           } else {
             console.warn(
@@ -677,17 +656,14 @@ export const processAIResponse = async (messages: Message[]) => {
 /**
  * アシスタントとの会話を行う
  * 画面のチャット欄から入力されたときに実行される処理
- * Youtubeでチャット取得した場合もこの関数を使用する
  */
 export const handleSendChatFn = () => async (text: string) => {
-  const sessionId = generateSessionId()
   const newMessage = text
   const timestamp = new Date().toISOString()
 
   if (newMessage === null) return
 
   const ss = settingsStore.getState()
-  const sls = slideStore.getState()
   const wsManager = webSocketStore.getState().wsManager
   const modalImage = homeStore.getState().modalImage
 
@@ -714,54 +690,8 @@ export const handleSendChatFn = () => async (text: string) => {
         chatProcessing: false,
       })
     }
-  } else if (ss.realtimeAPIMode) {
-    if (wsManager?.websocket?.readyState === WebSocket.OPEN) {
-      homeStore.getState().upsertMessage({
-        role: 'user',
-        content: newMessage,
-        timestamp: timestamp,
-      })
-    }
   } else {
-    let systemPrompt = SYSTEM_PROMPT
-    if (ss.slideMode) {
-      if (sls.isPlaying) {
-        return
-      }
-
-      try {
-        let scripts = JSON.stringify(
-          require(
-            `../../../public/slides/${sls.selectedSlideDocs}/scripts.json`
-          )
-        )
-        systemPrompt = systemPrompt.replace('{{SCRIPTS}}', scripts)
-
-        let supplement = ''
-        try {
-          const response = await fetch(
-            `/api/getSupplement?slideName=${sls.selectedSlideDocs}`
-          )
-          if (!response.ok) {
-            throw new Error('Failed to fetch supplement')
-          }
-          const data = await response.json()
-          supplement = data.supplement
-          systemPrompt = systemPrompt.replace('{{SUPPLEMENT}}', supplement)
-        } catch (e) {
-          console.error('supplement.txtの読み込みに失敗しました:', e)
-        }
-
-        const answerString = await judgeSlide(newMessage, scripts, supplement)
-        const answer = JSON.parse(answerString)
-        if (answer.judge === 'true' && answer.page !== '') {
-          goToSlide(Number(answer.page))
-          systemPrompt += `\n\nEspecial Page Number is ${answer.page}.`
-        }
-      } catch (e) {
-        console.error(e)
-      }
-    }
+    const systemPrompt = SYSTEM_PROMPT
 
     homeStore.setState({ chatProcessing: true })
 
@@ -942,73 +872,3 @@ export const handleReceiveTextFromWsFn =
 
     homeStore.setState({ chatProcessing: type !== 'end' })
   }
-
-/**
- * RealtimeAPIからのテキストまたは音声データを受信したときの処理
- */
-export const handleReceiveTextFromRtFn = () => {
-  // 連続する response.audio イベントで共通の sessionId を使用するための変数
-  let currentSessionId: string | null = null
-
-  return async (
-    text?: string,
-    role?: string,
-    type?: string,
-    buffer?: ArrayBuffer
-  ) => {
-    // type が `response.audio` かつ currentSessionId が未設定の場合に新しいセッションIDを発番
-    // それ以外の場合は既存の sessionId を使い続ける。
-    // レスポンス終了（content_part.done 等）時にリセットする。
-
-    if (currentSessionId === null) {
-      currentSessionId = generateSessionId()
-    }
-
-    const sessionId = currentSessionId
-
-    const ss = settingsStore.getState()
-    const hs = homeStore.getState()
-
-    if (ss.realtimeAPIMode) {
-      console.log('realtime api mode: true')
-    } else if (ss.audioMode) {
-      console.log('audio mode: true')
-    } else {
-      console.log('realtime api mode: false')
-      return
-    }
-
-    homeStore.setState({ chatProcessing: true })
-
-    if (role == 'assistant') {
-      if (type?.includes('response.audio') && buffer !== undefined) {
-        console.log('response.audio:')
-        try {
-          speakCharacter(
-            sessionId,
-            {
-              emotion: 'neutral',
-              message: '',
-              buffer: buffer,
-            },
-            () => {},
-            () => {}
-          )
-        } catch (e) {
-          console.error('Error in speakCharacter:', e)
-        }
-      } else if (type === 'response.content_part.done' && text !== undefined) {
-        homeStore.getState().upsertMessage({
-          role: role,
-          content: text,
-        })
-      }
-    }
-    homeStore.setState({ chatProcessing: false })
-
-    // レスポンスが完了したらセッションIDをリセット
-    if (type === 'response.content_part.done') {
-      currentSessionId = null
-    }
-  }
-}

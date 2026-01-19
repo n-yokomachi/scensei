@@ -56,8 +56,8 @@ const MessageReceiver = () => {
                 homeStore.setState({ triggerShutter: true })
               }
 
-              // webcamStatusまたはcaptureStatusがtrueの場合、画像が取得されるまで待機
-              if (hs.webcamStatus || hs.captureStatus) {
+              // webcamStatusがtrueの場合、画像が取得されるまで待機
+              if (hs.webcamStatus) {
                 // 画像が取得されるまで待つ
                 capturedImage = await Promise.race([
                   new Promise<string>((resolve) => {
@@ -132,8 +132,8 @@ const MessageReceiver = () => {
                 homeStore.setState({ triggerShutter: true })
               }
 
-              // webcamStatusまたはcaptureStatusがtrueの場合、画像が取得されるまで待機
-              if (hs.webcamStatus || hs.captureStatus) {
+              // webcamStatusがtrueの場合、画像が取得されるまで待機
+              if (hs.webcamStatus) {
                 // 画像が取得されるまで待つ
                 capturedImage = await Promise.race([
                   new Promise<string>((resolve) => {

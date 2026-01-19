@@ -5,11 +5,9 @@ import Image from 'next/image'
 import homeStore from '@/features/stores/home'
 import menuStore from '@/features/stores/menu'
 import settingsStore from '@/features/stores/settings'
-import slideStore from '@/features/stores/slide'
 import { ChatLog } from './chatLog'
 import { IconButton } from './iconButton'
 import Settings from './settings'
-import Slides from './slides'
 
 // モバイルデバイス検出用のカスタムフック
 const useIsMobile = () => {
@@ -34,12 +32,7 @@ const useIsMobile = () => {
 }
 
 export const Menu = () => {
-  const youtubeMode = settingsStore((s) => s.youtubeMode)
-  const youtubePlaying = settingsStore((s) => s.youtubePlaying)
-  const slideMode = settingsStore((s) => s.slideMode)
-  const slideVisible = menuStore((s) => s.slideVisible)
   const showControlPanel = settingsStore((s) => s.showControlPanel)
-  const slidePlaying = slideStore((s) => s.isPlaying)
 
   const [showSettings, setShowSettings] = useState(false)
 
@@ -49,10 +42,7 @@ export const Menu = () => {
   // モバイルデバイス検出
   const isMobile = useIsMobile()
 
-  const selectedSlideDocs = slideStore((state) => state.selectedSlideDocs)
   const { t } = useTranslation()
-
-  const [markdownContent, setMarkdownContent] = useState('')
 
   // ロングタップ処理用の関数
   const handleTouchStart = () => {
@@ -70,17 +60,6 @@ export const Menu = () => {
   const handleTouchCancel = () => {
     setTouchStartTime(null)
   }
-
-  useEffect(() => {
-    if (!selectedSlideDocs) return
-
-    fetch(`/slides/${selectedSlideDocs}/slides.md`)
-      .then((response) => response.text())
-      .then((text) => setMarkdownContent(text))
-      .catch((error) =>
-        console.error('Failed to fetch markdown content:', error)
-      )
-  }, [selectedSlideDocs])
 
   const handleChangeVrmFile = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,16 +98,6 @@ export const Menu = () => {
     }
   }, [])
 
-  useEffect(() => {
-    if (!youtubePlaying) {
-      settingsStore.setState({
-        youtubeContinuationCount: 0,
-        youtubeNoCommentCount: 0,
-        youtubeSleepMode: false,
-      })
-    }
-  }, [youtubePlaying])
-
   return (
     <>
       {/* ロングタップ用の透明な領域（モバイルでコントロールパネルが非表示の場合） */}
@@ -144,57 +113,30 @@ export const Menu = () => {
       )}
 
       <div className="flex flex-col h-full">
-        {/* ヘッダー部分 */}
-        <div className="flex-shrink-0 z-15 px-4 py-2">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="Scensei"
-              width={120}
-              height={40}
-              priority
-            />
-            <div className="flex gap-[8px]">
-              {showControlPanel && (
-                <>
+        {/* ヘッダー部分（デスクトップのみ表示、モバイルはMobileHeaderを使用） */}
+        {!isMobile && (
+          <div className="flex-shrink-0 z-15 px-4 py-2">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo.png"
+                alt="Scensei"
+                width={120}
+                height={40}
+                priority
+              />
+              <div className="flex gap-[8px]">
+                {showControlPanel && (
                   <IconButton
                     iconName="24/Settings"
                     isProcessing={false}
                     onClick={() => setShowSettings(true)}
                     aria-label={t('BasedSettings')}
                   />
-                  {youtubeMode && (
-                    <IconButton
-                      iconName={youtubePlaying ? '24/PauseAlt' : '24/Video'}
-                      isProcessing={false}
-                      onClick={() =>
-                        settingsStore.setState({
-                          youtubePlaying: !youtubePlaying,
-                        })
-                      }
-                      aria-label={youtubePlaying ? 'Pause' : 'Play'}
-                    />
-                  )}
-                  {slideMode && (
-                    <IconButton
-                      iconName="24/FrameEffect"
-                      isProcessing={false}
-                      onClick={() =>
-                        menuStore.setState({ slideVisible: !slideVisible })
-                      }
-                      disabled={slidePlaying}
-                      aria-label={t('SlideMode')}
-                    />
-                  )}
-                </>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        {/* スライド表示 */}
-        <div className="relative">
-          {slideMode && slideVisible && <Slides markdown={markdownContent} />}
-        </div>
+        )}
         {/* チャットログ */}
         <div className="flex-1 overflow-hidden">
           <ChatLog />

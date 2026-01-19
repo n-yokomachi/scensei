@@ -15,7 +15,6 @@ const aiServiceLogos = {
   openrouter: '/images/ai-logos/openrouter.svg',
   lmstudio: '/images/ai-logos/lmstudio.svg',
   ollama: '/images/ai-logos/ollama.svg',
-  dify: '/images/ai-logos/dify.svg',
   'custom-api': '/images/ai-logos/custom-api.svg',
 }
 

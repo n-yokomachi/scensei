@@ -13,7 +13,7 @@ export const MobileHeader = () => {
   return (
     <>
       <header
-        className="flex-shrink-0 bg-[#1a1a2e]/90 backdrop-blur-sm px-4 py-2 flex items-center justify-between border-b border-[#D4AF37]/20"
+        className="flex-shrink-0 px-4 py-2 flex items-center justify-between"
         role="banner"
       >
         <Image src="/logo.png" alt="Scensei" width={120} height={40} priority />

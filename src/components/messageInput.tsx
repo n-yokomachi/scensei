@@ -4,7 +4,6 @@ import Image from 'next/image'
 
 import homeStore from '@/features/stores/home'
 import settingsStore from '@/features/stores/settings'
-import slideStore from '@/features/stores/slide'
 import { isMultiModalAvailable } from '@/features/constants/aiModels'
 import { IconButton } from './iconButton'
 
@@ -35,7 +34,6 @@ export const MessageInput = ({
   onClickSendButton,
 }: Props) => {
   const chatProcessing = homeStore((s) => s.chatProcessing)
-  const slidePlaying = slideStore((s) => s.isPlaying)
   const modalImage = homeStore((s) => s.modalImage)
   const selectAIService = settingsStore((s) => s.selectAIService)
   const selectAIModel = settingsStore((s) => s.selectAIModel)
@@ -48,7 +46,6 @@ export const MessageInput = ({
   const [fileError, setFileError] = useState<string>('')
   const [showImageActions, setShowImageActions] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const realtimeAPIMode = settingsStore((s) => s.realtimeAPIMode)
 
   const { t } = useTranslation()
 
@@ -417,7 +414,7 @@ export const MessageInput = ({
                 onKeyDown={handleKeyPress}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
-                disabled={chatProcessing || slidePlaying || realtimeAPIMode}
+                disabled={chatProcessing}
                 className="bg-white hover:bg-white-hover focus:bg-white focus:ring-2 focus:ring-secondary focus:outline-none disabled:bg-gray-100 disabled:text-primary-disabled disabled:cursor-not-allowed rounded-2xl w-full px-4 text-theme-default font-bold transition-all duration-200"
                 value={userMessage}
                 rows={rows}
@@ -435,7 +432,7 @@ export const MessageInput = ({
                 iconName="24/Send"
                 className="bg-secondary hover:bg-secondary-hover active:bg-secondary-press disabled:bg-secondary-disabled disabled:opacity-50 disabled:cursor-not-allowed"
                 isProcessing={chatProcessing}
-                disabled={chatProcessing || !userMessage || realtimeAPIMode}
+                disabled={chatProcessing || !userMessage}
                 onClick={onClickSendButton}
                 aria-label={t('SendMessage.directSendTitle')}
               />

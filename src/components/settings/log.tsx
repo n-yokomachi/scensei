@@ -42,14 +42,11 @@ const Log = () => {
           <h2 className="text-2xl font-bold">{t('ConversationHistory')}</h2>
         </div>
         <div className="my-2">
-          {selectAIService !== 'dify'
-            ? t('ConversationHistoryInfo', { count: maxPastMessages })
-            : t('DifyInfo2')}
+          {t('ConversationHistoryInfo', { count: maxPastMessages })}
         </div>
         <TextButton
           onClick={() => {
             homeStore.setState({ chatLog: [] })
-            settingsStore.setState({ difyConversationId: '' })
           }}
         >
           {t('ConversationHistoryReset')}
