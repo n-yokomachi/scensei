@@ -311,10 +311,3 @@ export const speakCharacter = (
   // アニメーション開始
   animateLipSync()
 }
-
-/**
- * テスト音声再生（無効化）
- */
-export const testVoice = async () => {
-  // 音声機能は無効化されています
-}

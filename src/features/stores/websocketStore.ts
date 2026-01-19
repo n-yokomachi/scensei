@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { WebSocketManager } from '@/utils/WebSocketManager'
-import { TmpMessage } from '@/components/realtimeAPIUtils'
 
 interface WebSocketState {
   wsManager: WebSocketManager | null

@@ -3,10 +3,10 @@ import { useState, useEffect } from 'react'
 /**
  * メディアクエリの状態を監視するカスタムフック
  * @param query メディアクエリ文字列 (例: '(max-width: 767px)')
- * @returns クエリがマッチしているかどうか
+ * @returns クエリがマッチしているかどうか（SSR時はnull）
  */
-export const useMediaQuery = (query: string): boolean => {
-  const [matches, setMatches] = useState(false)
+export const useMediaQuery = (query: string): boolean | null => {
+  const [matches, setMatches] = useState<boolean | null>(null)
 
   useEffect(() => {
     const media = window.matchMedia(query)

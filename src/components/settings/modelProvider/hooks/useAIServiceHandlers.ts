@@ -1,7 +1,5 @@
 import { useCallback } from 'react'
-import menuStore from '@/features/stores/menu'
 import settingsStore from '@/features/stores/settings'
-import slideStore from '@/features/stores/slide'
 import {
   isMultiModalModel,
   googleSearchGroundingModels,
@@ -47,22 +45,8 @@ export const useAIServiceHandlers = () => {
     })
 
     if (!isMultiModalModel(newService, selectedModel)) {
-      menuStore.setState({ showWebcam: false })
-
       settingsStore.setState({
-        conversationContinuityMode: false,
-        slideMode: false,
         multiModalMode: 'never',
-      })
-      slideStore.setState({
-        isPlaying: false,
-      })
-    }
-
-    if (newService !== 'openai' && newService !== 'azure') {
-      settingsStore.setState({
-        realtimeAPIMode: false,
-        audioMode: false,
       })
     }
 

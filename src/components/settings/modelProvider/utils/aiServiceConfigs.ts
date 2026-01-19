@@ -27,7 +27,6 @@ export const aiServiceOptions: AIServiceConfig[] = [
   { value: 'openrouter', label: 'OpenRouter' },
   { value: 'lmstudio', label: 'LM Studio' },
   { value: 'ollama', label: 'Ollama' },
-  { value: 'dify', label: 'Dify' },
   { value: 'custom-api', label: 'Custom API' },
 ]
 
@@ -147,11 +146,6 @@ export const getServiceConfigByKey = (
     label: 'Ollama',
     showMultiModalToggle: true,
     customModelValidation: false,
-  },
-  dify: {
-    value: 'dify',
-    label: 'Dify',
-    keyLabel: t('DifyAPIKeyLabel'),
   },
   'custom-api': {
     value: 'custom-api',

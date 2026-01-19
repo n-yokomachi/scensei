@@ -1,23 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import settingsStore from '@/features/stores/settings'
 import homeStore from '@/features/stores/home'
-import menuStore from '@/features/stores/menu'
-import slideStore from '@/features/stores/slide'
 import { handleSendChatFn } from '../features/chat/handlers'
 import { MessageInputContainer } from './messageInputContainer'
 import { PresetQuestionButtons } from './presetQuestionButtons'
-import { SlideText } from './slideText'
 import { isMultiModalAvailable } from '@/features/constants/aiModels'
 import { AIService } from '@/features/constants/settings'
 
 export const Form = () => {
   const modalImage = homeStore((s) => s.modalImage)
   const webcamStatus = homeStore((s) => s.webcamStatus)
-  const captureStatus = homeStore((s) => s.captureStatus)
-  const slideMode = settingsStore((s) => s.slideMode)
-  const slideVisible = menuStore((s) => s.slideVisible)
-  const slidePlaying = slideStore((s) => s.isPlaying)
-  const chatProcessingCount = homeStore((s) => s.chatProcessingCount)
   const multiModalMode = settingsStore((s) => s.multiModalMode)
   const selectAIService = settingsStore((s) => s.selectAIService)
   const selectAIModel = settingsStore((s) => s.selectAIModel)
@@ -55,7 +47,7 @@ export const Form = () => {
       // モードに基づいて画像キャプチャの必要性を判定
       let shouldCaptureImage = false
 
-      if (isMultiModalSupported && (webcamStatus || captureStatus)) {
+      if (isMultiModalSupported && webcamStatus) {
         switch (multiModalMode) {
           case 'always':
             shouldCaptureImage = true
@@ -89,7 +81,6 @@ export const Form = () => {
     [
       handleSendChat,
       webcamStatus,
-      captureStatus,
       setDelayedText,
       multiModalMode,
       selectAIService,
@@ -99,12 +90,7 @@ export const Form = () => {
     ]
   )
 
-  return slideMode &&
-    slideVisible &&
-    slidePlaying &&
-    chatProcessingCount !== 0 ? (
-    <SlideText />
-  ) : (
+  return (
     <div className="flex flex-col flex-shrink-0">
       <PresetQuestionButtons onSelectQuestion={hookSendChat} />
       <MessageInputContainer onChatProcessStart={hookSendChat} />

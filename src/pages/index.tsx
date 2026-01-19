@@ -11,18 +11,16 @@ import homeStore from '@/features/stores/home'
 import settingsStore from '@/features/stores/settings'
 import '@/lib/i18n'
 import { buildUrl } from '@/utils/buildUrl'
-import { YoutubeManager } from '@/components/youtubeManager'
 import { useIsMobile } from '@/hooks/useMediaQuery'
 import { MobileHeader } from '@/components/mobileHeader'
 
 const Home = () => {
   const isMobile = useIsMobile()
   const webcamStatus = homeStore((s) => s.webcamStatus)
-  const captureStatus = homeStore((s) => s.captureStatus)
   const backgroundImageUrl = homeStore((s) => s.backgroundImageUrl)
   const useVideoAsBackground = settingsStore((s) => s.useVideoAsBackground)
   const bgUrl =
-    (webcamStatus || captureStatus) && useVideoAsBackground
+    webcamStatus && useVideoAsBackground
       ? ''
       : backgroundImageUrl === 'green'
         ? ''
@@ -30,7 +28,7 @@ const Home = () => {
   const messageReceiverEnabled = settingsStore((s) => s.messageReceiverEnabled)
 
   const backgroundStyle =
-    (webcamStatus || captureStatus) && useVideoAsBackground
+    webcamStatus && useVideoAsBackground
       ? {}
       : backgroundImageUrl === 'green'
         ? { backgroundColor: '#00FF00' }
@@ -38,18 +36,31 @@ const Home = () => {
           ? { backgroundImage: bgUrl }
           : { backgroundColor: '#E8E8E8' }
 
+  // SSR時（isMobile === null）はレイアウトを確定しない
   // モバイル用レイアウト: 縦並び（VRM上、チャット中、入力下）
   // デスクトップ用レイアウト: 横並び（チャット左、VRM右、入力下）
-  const gridStyle = isMobile
-    ? {
-        display: 'flex',
-        flexDirection: 'column' as const,
-      }
-    : {
-        display: 'grid',
-        gridTemplateColumns: 'minmax(400px, 800px) 1fr',
-        gridTemplateRows: '1fr auto',
-      }
+  const gridStyle =
+    isMobile === null
+      ? {} // SSR時は空スタイル
+      : isMobile
+        ? {
+            display: 'flex',
+            flexDirection: 'column' as const,
+          }
+        : {
+            display: 'grid',
+            gridTemplateColumns: 'minmax(400px, 800px) 1fr',
+            gridTemplateRows: '1fr auto',
+          }
+
+  // SSR時はローディング表示
+  if (isMobile === null) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-[#E8E8E8]">
+        <Meta />
+      </div>
+    )
+  }
 
   return (
     <div
@@ -106,7 +117,6 @@ const Home = () => {
       {messageReceiverEnabled && <MessageReceiver />}
       <Toasts />
       <WebSocketManager />
-      <YoutubeManager />
       <ImageOverlay />
     </div>
   )

@@ -47,6 +47,26 @@ PRレビューで発見した、後回しにする課題を記載する。
   - 漢字→ひらがな変換ライブラリ（kuromoji.jsなど）を導入
   - または音声合成APIから音素情報を取得（音声機能復活時）
 
+### useMediaQueryのSSR対応
+
+- **発見**: Phase4 PR#4 レビュー
+- **内容**: `useMediaQuery`の初期値が`false`固定のため、SSR時とクライアント時で表示が一瞬ずれる可能性
+- **影響**: 初回レンダリング時にレイアウトがチラつく可能性（ハイドレーションミスマッチ）
+- **対応案**: `useState(false)`の初期値を動的に設定、またはSSR時は常にデスクトップレイアウトを表示
+
+### 削除済みタブのAPIエンドポイント残存
+
+- **発見**: Phase4 PR#4 レビュー
+- **内容**: Youtube/スライド/画像設定タブを削除したが、関連APIエンドポイントは残存
+- **関連ファイル**:
+  - `src/pages/api/convertSlide.ts`
+  - `src/pages/api/getSlideFolders.ts`
+  - `src/pages/api/updateSlideData.ts`
+  - `src/pages/api/upload-image.ts`
+  - `src/pages/api/delete-image.ts`
+  - `src/pages/api/get-image-list.ts`
+- **対応案**: 将来使用しないなら削除検討
+
 ---
 
 ## 対応済み

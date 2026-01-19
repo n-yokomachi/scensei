@@ -11,13 +11,6 @@ const ExternalLinkage = () => {
     settingsStore.setState({
       externalLinkageMode: newMode,
     })
-
-    if (newMode) {
-      settingsStore.setState({
-        conversationContinuityMode: false,
-        realtimeAPIMode: false,
-      })
-    }
   }, [])
 
   return (
