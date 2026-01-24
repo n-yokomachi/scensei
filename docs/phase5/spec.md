@@ -14,9 +14,10 @@ Strands Agentsを使用したエージェントをAmazon Bedrock AgentCore Runti
 
 ## 前提条件
 
-- AWSアカウント（Bedrock利用可能）
+- AWSアカウント（Bedrock利用可能、Claude Sonnet 4へのアクセス有効化済み）
 - Python 3.10以上
-- AWS CLI設定済み
+- AWS CLI設定済み（デフォルトリージョン: us-west-2 推奨）
+- 適切なIAMパーミッション
 
 ---
 
@@ -33,7 +34,7 @@ cd backend
 
 # pyproject.toml作成（uv推奨）
 uv init
-uv add strands-agents strands-agents-tools
+uv add strands-agents strands-agents-tools bedrock-agentcore
 uv add --dev pytest pytest-asyncio
 ```
 
@@ -51,6 +52,7 @@ backend/
 │       └── emotion_parser.py   # 感情タグパーサー
 ├── tests/
 │   └── test_agent.py
+├── app.py                      # AgentCore Runtime エントリポイント
 ├── pyproject.toml
 └── README.md
 ```
@@ -59,9 +61,8 @@ backend/
 
 ```bash
 # backend/.env
-AWS_REGION=ap-northeast-1
+AWS_REGION=us-west-2
 AWS_PROFILE=default  # または適切なプロファイル
-BEDROCK_MODEL_ID=us.anthropic.claude-sonnet-4-5-20250514-v1:0
 ```
 
 ---
@@ -111,14 +112,21 @@ SCENSEI_SYSTEM_PROMPT = """
 # backend/src/agent/scensei_agent.py
 
 from strands import Agent
+from strands.models import BedrockModel
 from .prompts import SCENSEI_SYSTEM_PROMPT
 
 def create_scensei_agent() -> Agent:
     """Scenseiエージェントを作成"""
+    # Bedrock経由でClaudeを使用
+    bedrock_model = BedrockModel(
+        model_id="us.anthropic.claude-sonnet-4-20250514-v1:0",
+        streaming=True
+    )
+
     agent = Agent(
-        model="us.anthropic.claude-sonnet-4-5-20250514-v1:0",
+        model=bedrock_model,
         system_prompt=SCENSEI_SYSTEM_PROMPT,
-        # Phase 6以降でtools追加予定
+        # Phase 7以降でtools追加予定
     )
     return agent
 
@@ -190,21 +198,45 @@ def parse_emotion_tags(text: str) -> Tuple[str, List[dict]]:
 
 ### 5.3 AgentCore Runtimeデプロイ
 
-#### デプロイ設定ファイル
+#### Starter Toolkit を使ったデプロイ（推奨）
 
-```yaml
-# backend/agentcore-config.yaml
-runtime:
-  name: scensei-agent
-  region: ap-northeast-1
+```bash
+# Starter Toolkit インストール
+pip install bedrock-agentcore-starter-toolkit
+```
 
-agent:
-  entry_point: src.agent.scensei_agent:create_scensei_agent
-  python_version: "3.11"
+#### エントリポイント作成
 
-resources:
-  memory: 512
-  timeout: 30
+```python
+# backend/app.py
+
+from bedrock_agentcore.runtime import BedrockAgentCoreApp
+from src.agent.scensei_agent import create_scensei_agent
+from src.tools.emotion_parser import parse_emotion_tags
+
+app = BedrockAgentCoreApp()
+agent = create_scensei_agent()
+
+@app.entrypoint
+def invoke(prompt: str) -> dict:
+    """エージェント呼び出しエントリポイント"""
+    response = agent(prompt)
+
+    # レスポンスからテキストを抽出
+    response_text = str(response)
+
+    # 感情タグをパース
+    clean_text, segments = parse_emotion_tags(response_text)
+
+    return {
+        "text": clean_text,
+        "segments": segments,
+        "raw": response_text
+    }
+
+if __name__ == "__main__":
+    # ローカルテスト用（ポート8080で起動）
+    app.run(port=8080)
 ```
 
 #### デプロイ手順
@@ -212,33 +244,57 @@ resources:
 ```bash
 cd backend
 
-# AgentCore CLI でデプロイ
-agentcore deploy --config agentcore-config.yaml
+# 設定（対話形式）
+agentcore configure -e app.py
+
+# デプロイ（direct_code_deploy モード、Docker不要）
+agentcore deploy
 
 # エンドポイント確認
-agentcore describe scensei-agent
+agentcore describe
 ```
 
 #### 動作確認
 
 ```bash
 # CLIからテスト
-agentcore invoke scensei-agent --input '{"message": "こんにちは"}'
+agentcore invoke '{"prompt": "こんにちは！夏におすすめの香水を教えて"}'
+```
+
+#### プログラムからの呼び出し
+
+```python
+import boto3
+
+client = boto3.client('bedrock-agentcore-runtime', region_name='us-west-2')
+
+response = client.invoke_agent(
+    agentRuntimeName='scensei-agent',
+    input={'prompt': 'こんにちは'}
+)
+
+print(response['output'])
 ```
 
 ---
 
 ### 5.4 Next.js連携
 
-#### API Route修正
+#### API Route作成
 
 ```typescript
 // src/pages/api/ai/agentcore.ts
 
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { BedrockAgentCoreRuntimeClient, InvokeAgentCommand } from '@aws-sdk/client-bedrock-agentcore-runtime'
 
-const AGENTCORE_ENDPOINT = process.env.AGENTCORE_ENDPOINT
-const AGENTCORE_API_KEY = process.env.AGENTCORE_API_KEY
+const client = new BedrockAgentCoreRuntimeClient({
+  region: process.env.AWS_REGION || 'us-west-2',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+})
 
 export default async function handler(
   req: NextApiRequest,
@@ -249,30 +305,22 @@ export default async function handler(
   }
 
   try {
-    const { messages } = req.body
+    const { message } = req.body
 
-    const response = await fetch(AGENTCORE_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${AGENTCORE_API_KEY}`,
-      },
-      body: JSON.stringify({
-        messages,
-        // セッションID等は Phase 6 で追加
-      }),
+    const command = new InvokeAgentCommand({
+      agentRuntimeName: process.env.AGENTCORE_RUNTIME_NAME || 'scensei-agent',
+      input: { prompt: message },
     })
 
-    if (!response.ok) {
-      throw new Error(`AgentCore error: ${response.statusText}`)
-    }
+    const response = await client.send(command)
 
-    const data = await response.json()
+    // レスポンスをパースしてフロントエンド用に変換
+    const output = JSON.parse(response.output || '{}')
 
-    // 感情タグをパースしてフロントエンド用に変換
-    // （バックエンドでパース済みの場合はそのまま返却）
-
-    return res.status(200).json(data)
+    return res.status(200).json({
+      text: output.text,
+      segments: output.segments,
+    })
   } catch (error) {
     console.error('AgentCore API error:', error)
     return res.status(500).json({ error: 'Internal server error' })
@@ -284,8 +332,16 @@ export default async function handler(
 
 ```bash
 # .env.local
-AGENTCORE_ENDPOINT=https://xxx.agentcore.amazonaws.com/v1/agents/scensei-agent/invoke
-AGENTCORE_API_KEY=xxx
+AWS_REGION=us-west-2
+AWS_ACCESS_KEY_ID=xxx
+AWS_SECRET_ACCESS_KEY=xxx
+AGENTCORE_RUNTIME_NAME=scensei-agent
+```
+
+#### AWS SDK インストール
+
+```bash
+npm install @aws-sdk/client-bedrock-agentcore-runtime
 ```
 
 ---
@@ -295,15 +351,15 @@ AGENTCORE_API_KEY=xxx
 ### ローカル動作確認
 
 - [ ] Pythonプロジェクトがビルドできる
-- [ ] エージェントがローカルで応答を返す
+- [ ] `python -m src.agent.scensei_agent` でローカル動作確認
 - [ ] 感情タグが正しく含まれる
 - [ ] 日本語が正しく処理される
 
 ### AgentCore Runtime
 
-- [ ] デプロイが成功する
-- [ ] エンドポイントが取得できる
-- [ ] CLIからの呼び出しが成功する
+- [ ] `agentcore deploy` が成功する
+- [ ] `agentcore describe` でエンドポイント確認
+- [ ] `agentcore invoke` でテスト成功
 - [ ] エラーハンドリングが動作する
 
 ### E2E
@@ -328,8 +384,10 @@ AGENTCORE_API_KEY=xxx
 
 ## 参考リンク
 
-- [Strands Agents 公式ドキュメント](https://strandsagents.com/)
+- [Strands Agents 公式ドキュメント](https://strandsagents.com/latest/)
+- [Strands Agents Python SDK](https://github.com/strands-agents/sdk-python)
 - [Strands + AgentCore デプロイガイド](https://strandsagents.com/latest/documentation/docs/user-guide/deploy/deploy_to_bedrock_agentcore/)
+- [AgentCore Starter Toolkit クイックスタート](https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/runtime/quickstart.html)
 - [Amazon Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/)
 - [AgentCore サンプル集](https://github.com/awslabs/amazon-bedrock-agentcore-samples)
 
@@ -341,3 +399,26 @@ AGENTCORE_API_KEY=xxx
 - ツール機能（香水検索、Web検索）はPhase 7で追加
 - 記憶機能（セッション管理、ユーザープロファイル）はPhase 6で追加
 - 現時点ではstreaming対応は見送り（Phase 9で検討）
+- AgentCore Runtimeは現在Preview（us-west-2, us-east-1, ap-southeast-2, eu-central-1で利用可能）
+
+---
+
+## 技術的な注意点
+
+### インポートパス
+- パッケージ名: `strands-agents`
+- インポート: `from strands import Agent`
+- Bedrockモデル: `from strands.models import BedrockModel`
+
+### 認証
+- AgentCore RuntimeはIAM認証（SigV4）を使用
+- AWS SDKを使用する場合、IAM credentialsが必要
+- Starter ToolkitはAWS CLIの設定を自動利用
+
+### デプロイモード
+- `direct_code_deploy`（推奨）: Docker不要、CodeBuild経由でデプロイ
+- `container`: Docker/ECRを使用したカスタムデプロイ
+
+### 会話履歴
+- 現時点ではステートレス（各リクエストが独立）
+- Phase 6でAgentCore Memoryを導入し、セッション管理を実装
