@@ -437,6 +437,28 @@ export const MessageInput = ({
                 aria-label={t('SendMessage.directSendTitle')}
               />
             </div>
+            {/* ジェスチャーテストボタン */}
+            <div className="flex-shrink-0 pb-[0.3rem] flex gap-1">
+              <button
+                onClick={() => {
+                  console.log('Bow button clicked')
+                  const model = homeStore.getState().viewer?.model
+                  console.log('Model:', model)
+                  model?.playGesture('bow')
+                }}
+                className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+                title="お辞儀"
+              >
+                🙇
+              </button>
+              <button
+                onClick={() => homeStore.getState().viewer?.model?.playGesture('present')}
+                className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+                title="紹介"
+              >
+                👐
+              </button>
+            </div>
           </div>
         </div>
       </div>
