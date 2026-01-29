@@ -31,7 +31,8 @@ export class EmoteController {
     // ジェスチャーで目を閉じている間は瞬きをスキップ
     // ただし感情表現中は目を閉じないのでスキップ不要
     const isEmotionActive = this._expressionController.isEmotionActive
-    const skipAutoBlink = this._gestureController.isClosingEyes && !isEmotionActive
+    const skipAutoBlink =
+      this._gestureController.isClosingEyes && !isEmotionActive
     this._expressionController.update(delta, skipAutoBlink)
     // 感情表現中はジェスチャーの目閉じをスキップ
     this._gestureController.update(delta, isEmotionActive)
@@ -39,7 +40,8 @@ export class EmoteController {
 
   public updateExpression(delta: number) {
     const isEmotionActive = this._expressionController.isEmotionActive
-    const skipAutoBlink = this._gestureController.isClosingEyes && !isEmotionActive
+    const skipAutoBlink =
+      this._gestureController.isClosingEyes && !isEmotionActive
     this._expressionController.update(delta, skipAutoBlink)
   }
 

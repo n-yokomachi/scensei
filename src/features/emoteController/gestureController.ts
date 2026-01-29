@@ -341,7 +341,11 @@ export class GestureController {
     if (progress >= 1) {
       // 目を閉じていた場合は開ける（感情表現中はスキップ）
       const definition = this._gestures.get(this._currentGesture)
-      if (definition?.closeEyes && this._vrm.expressionManager && !skipEyeClose) {
+      if (
+        definition?.closeEyes &&
+        this._vrm.expressionManager &&
+        !skipEyeClose
+      ) {
         this._vrm.expressionManager.setValue('blink', 0)
       }
       this._isPlaying = false
