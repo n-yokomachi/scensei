@@ -227,15 +227,17 @@ export class GestureController {
 
   /**
    * フレーム更新（VRM.update()の後に呼び出すこと）
+   * @param delta フレーム間の経過時間
+   * @param skipEyeClose 目を閉じる処理をスキップするか（感情表現中など）
    */
-  public update(delta: number) {
+  public update(delta: number, skipEyeClose: boolean = false) {
     if (!this._isPlaying || this._currentGesture === 'none') return
 
     const definition = this._gestures.get(this._currentGesture)
     if (!definition) return
 
     if (this._isReturning) {
-      this._updateReturnAnimation(delta)
+      this._updateReturnAnimation(delta, skipEyeClose)
     } else if (this._isHolding) {
       // ホールド中は最大ブレンドで維持
       this._applyGestureRotations()
@@ -243,8 +245,10 @@ export class GestureController {
       this._updateGestureAnimation(delta, definition)
     }
 
-    // ジェスチャー中の表情を適用
-    this._applyGestureExpression()
+    // ジェスチャー中の表情を適用（感情表現中はスキップ）
+    if (!skipEyeClose) {
+      this._applyGestureExpression()
+    }
   }
 
   private _updateGestureAnimation(
@@ -324,7 +328,7 @@ export class GestureController {
     this._keyframeElapsedTime = 0
   }
 
-  private _updateReturnAnimation(delta: number) {
+  private _updateReturnAnimation(delta: number, skipEyeClose: boolean = false) {
     const returnDuration = 0.8
     this._keyframeElapsedTime += delta
     const progress = Math.min(this._keyframeElapsedTime / returnDuration, 1)
@@ -335,9 +339,9 @@ export class GestureController {
     this._applyGestureRotations()
 
     if (progress >= 1) {
-      // 目を閉じていた場合は開ける
+      // 目を閉じていた場合は開ける（感情表現中はスキップ）
       const definition = this._gestures.get(this._currentGesture)
-      if (definition?.closeEyes && this._vrm.expressionManager) {
+      if (definition?.closeEyes && this._vrm.expressionManager && !skipEyeClose) {
         this._vrm.expressionManager.setValue('blink', 0)
       }
       this._isPlaying = false

@@ -9,6 +9,9 @@ from bedrock_agentcore.memory.integrations.strands.session_manager import (
 from strands import Agent
 from strands.models import BedrockModel
 
+# NOTE: strands_agents_tools はAgentCoreランタイムで利用不可のため一時的に無効化
+# from strands_agents_tools import web_search
+
 from .prompts import SCENSEI_SYSTEM_PROMPT
 
 # デフォルトのMemory ID（AgentCore CLIで作成済み）
@@ -57,7 +60,8 @@ def create_scensei_agent(
         model=bedrock_model,
         system_prompt=SCENSEI_SYSTEM_PROMPT,
         session_manager=session_manager,
-        # Phase 7以降でtools追加予定
+        # NOTE: web_searchは一時的に無効化（AgentCoreランタイムで利用不可）
+        # tools=[web_search],
     )
     return agent
 

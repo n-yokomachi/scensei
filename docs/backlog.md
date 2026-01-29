@@ -79,6 +79,13 @@ PRレビューで発見した、後回しにする課題を記載する。
 - **内容**: `src/pages/api/ai/agentcore.ts`の138行目・154行目で`let`を使用しているが再代入なし
 - **対応案**: `const`に変更
 
+### Web検索機能の有効化
+
+- **発見**: Phase7 実装時
+- **内容**: `strands-agents-tools`パッケージがAgentCoreランタイムで利用不可（`ModuleNotFoundError`）
+- **現状**: 一時的に無効化し、システムプロンプトでLLMの知識に基づく提案を指示
+- **対応案**: AgentCoreがstrands-agents-toolsをサポートした時点で再有効化
+
 ---
 
 ## 対応済み
