@@ -420,7 +420,7 @@ export const MessageInput = ({
                 aria-label={t('SendMessage.directSendTitle')}
               />
             </div>
-            {/* ジェスチャーテストボタン */}
+            {/* ジェスチャーテストボタン（開発用・非表示）
             <div className="flex-shrink-0 pb-[0.3rem] flex gap-1">
               <button
                 onClick={() => {
@@ -444,6 +444,7 @@ export const MessageInput = ({
                 👐
               </button>
             </div>
+            */}
           </div>
         </div>
       </div>

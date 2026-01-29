@@ -80,4 +80,11 @@ export class ExpressionController {
       this._expressionManager?.setValue(this._currentLipSync.preset, weight)
     }
   }
+
+  /**
+   * 現在の感情がneutral以外かどうか
+   */
+  public get isEmotionActive(): boolean {
+    return this._currentEmotion !== 'neutral'
+  }
 }

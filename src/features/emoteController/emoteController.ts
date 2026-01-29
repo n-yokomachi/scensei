@@ -29,17 +29,24 @@ export class EmoteController {
 
   public update(delta: number) {
     // ジェスチャーで目を閉じている間は瞬きをスキップ
-    const skipAutoBlink = this._gestureController.isClosingEyes
+    // ただし感情表現中は目を閉じないのでスキップ不要
+    const isEmotionActive = this._expressionController.isEmotionActive
+    const skipAutoBlink =
+      this._gestureController.isClosingEyes && !isEmotionActive
     this._expressionController.update(delta, skipAutoBlink)
-    this._gestureController.update(delta)
+    // 感情表現中はジェスチャーの目閉じをスキップ
+    this._gestureController.update(delta, isEmotionActive)
   }
 
   public updateExpression(delta: number) {
-    const skipAutoBlink = this._gestureController.isClosingEyes
+    const isEmotionActive = this._expressionController.isEmotionActive
+    const skipAutoBlink =
+      this._gestureController.isClosingEyes && !isEmotionActive
     this._expressionController.update(delta, skipAutoBlink)
   }
 
   public updateGesture(delta: number) {
-    this._gestureController.update(delta)
+    const isEmotionActive = this._expressionController.isEmotionActive
+    this._gestureController.update(delta, isEmotionActive)
   }
 }

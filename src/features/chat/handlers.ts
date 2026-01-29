@@ -8,6 +8,53 @@ import i18next from 'i18next'
 import toastStore from '@/features/stores/toast'
 import { generateMessageId } from '@/utils/messageUtils'
 
+/**
+ * ストリーミング完了後に表情をニュートラルに戻す
+ * @param delayMs 遅延時間（ミリ秒）
+ */
+const resetExpressionAfterDelay = (delayMs: number = 3000) => {
+  setTimeout(() => {
+    const viewer = homeStore.getState().viewer
+    viewer?.model?.playEmotion('neutral')
+  }, delayMs)
+}
+
+// ジェスチャータグの種類
+type GestureTag = 'bow' | 'present'
+
+/**
+ * ジェスチャータグを検出してジェスチャーをトリガーする
+ * @param text テキスト
+ * @param triggeredGestures 既にトリガー済みのジェスチャー（重複防止用）
+ */
+const detectAndTriggerGestures = (
+  text: string,
+  triggeredGestures: Set<GestureTag>
+) => {
+  const viewer = homeStore.getState().viewer
+  if (!viewer?.model) return
+
+  const gestureTags: GestureTag[] = ['bow', 'present']
+
+  for (const gesture of gestureTags) {
+    if (!triggeredGestures.has(gesture) && text.includes(`[${gesture}]`)) {
+      viewer.model.playGesture(gesture)
+      triggeredGestures.add(gesture)
+      // 1つのジェスチャーをトリガーしたら次のチャンクを待つ
+      break
+    }
+  }
+}
+
+/**
+ * ジェスチャータグをテキストから除去する
+ * @param text 入力テキスト
+ * @returns ジェスチャータグを除去したテキスト
+ */
+const removeGestureTags = (text: string): string => {
+  return text.replace(/\[(bow|present)\]/g, '')
+}
+
 // セッションIDを生成する関数
 const generateSessionId = () => generateMessageId()
 
@@ -304,6 +351,7 @@ export const processAIResponse = async (userMessage: string) => {
   let persistentEmotion: EmotionType = 'neutral' // レスポンス全体で保持する感情
   let isCodeBlock = false
   let codeBlockContent = ''
+  const triggeredGestures = new Set<GestureTag>() // トリガー済みジェスチャーを追跡
 
   try {
     while (true) {
@@ -326,7 +374,7 @@ export const processAIResponse = async (userMessage: string) => {
             homeStore.getState().upsertMessage({
               id: currentMessageId,
               role: 'assistant',
-              content: currentMessageContent,
+              content: removeGestureTags(currentMessageContent),
             })
           }
         } else if (!isCodeBlock) {
@@ -336,12 +384,15 @@ export const processAIResponse = async (userMessage: string) => {
             homeStore.getState().upsertMessage({
               id: currentMessageId,
               role: 'assistant',
-              content: currentMessageContent,
+              content: removeGestureTags(currentMessageContent),
             })
           }
         }
 
         receivedChunksForSpeech += value
+
+        // ジェスチャータグを検出してトリガー
+        detectAndTriggerGestures(receivedChunksForSpeech, triggeredGestures)
       }
 
       let processableTextForSpeech = receivedChunksForSpeech
@@ -573,11 +624,14 @@ export const processAIResponse = async (userMessage: string) => {
     chatProcessing: false,
   })
 
+  // ストリーミング完了後に表情をニュートラルに戻す
+  resetExpressionAfterDelay()
+
   if (currentMessageContent.trim()) {
     homeStore.getState().upsertMessage({
       id: currentMessageId ?? generateMessageId(),
       role: 'assistant',
-      content: currentMessageContent.trim(),
+      content: removeGestureTags(currentMessageContent.trim()),
     })
   }
   if (isCodeBlock && codeBlockContent.trim()) {
