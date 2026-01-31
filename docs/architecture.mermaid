@@ -1,0 +1,572 @@
+%% Scensei アーキテクチャ図
+
+%% ===========================================
+%% 全体システム構成図
+%% ===========================================
+
+graph TB
+    subgraph Client["クライアント"]
+        Browser[ブラウザ]
+        VRM[VRMアバター]
+        Zustand[Zustand Store]
+        WebAuthnClient[WebAuthn Client]
+    end
+
+    subgraph Vercel["Vercel"]
+        NextJS[Next.js 14]
+        Middleware[Middleware]
+        APIRoutes[API Routes]
+
+        subgraph APIs["API エンドポイント"]
+            AgentCoreAPI["api/ai/agentcore"]
+            VercelAIAPI["api/ai/vercel"]
+            AuthAPI["api/admin/auth"]
+            WebAuthnAPI["api/admin/webauthn"]
+            PerfumeAPI["api/admin/perfumes"]
+            ImageAPI["api/upload-image"]
+            BackgroundAPI["api/upload-background"]
+            ChatLogAPI["api/save-chat-log"]
+        end
+
+        subgraph FileStorage["ファイルストレージ"]
+            ImagesDir["public/images/uploaded"]
+            BackgroundsDir["public/backgrounds"]
+        end
+    end
+
+    subgraph External["外部サービス"]
+        Supabase[(Supabase)]
+    end
+
+    subgraph AWS["AWS ap-northeast-1"]
+        subgraph Cognito["Amazon Cognito"]
+            CognitoPool[User Pool M2M]
+        end
+
+        subgraph AgentCore["Bedrock AgentCore"]
+            Runtime[Runtime scensei]
+            Memory[Memory STM]
+            Gateway[MCP Gateway]
+        end
+
+        subgraph Bedrock["Amazon Bedrock"]
+            Claude[Claude Haiku 4.5]
+        end
+
+        subgraph Lambda["AWS Lambda"]
+            SearchLambda[perfume-search]
+            CRUDLambda[perfume-crud]
+            AuthorizerLambda[api-authorizer]
+        end
+
+        subgraph APIGW["API Gateway"]
+            PerfumeAPIGW[scensei-perfume-api]
+        end
+
+        subgraph DynamoDB["Amazon DynamoDB"]
+            PerfumeTable[(scensei-perfumes)]
+        end
+    end
+
+    %% クライアント → Vercel
+    Browser --> NextJS
+    VRM --> Browser
+    Zustand --> Browser
+    WebAuthnClient --> WebAuthnAPI
+
+    %% Vercel内部
+    NextJS --> Middleware
+    Middleware --> APIRoutes
+    APIRoutes --> AgentCoreAPI
+    APIRoutes --> VercelAIAPI
+    APIRoutes --> AuthAPI
+    APIRoutes --> PerfumeAPI
+
+    %% Vercel → AWS
+    AgentCoreAPI -->|Cognito M2M Token| CognitoPool
+    AgentCoreAPI -->|Bearer Token| Runtime
+    PerfumeAPI -->|Cognito M2M Token| CognitoPool
+    PerfumeAPI -->|Bearer Token| PerfumeAPIGW
+
+    %% AgentCore内部
+    Runtime --> Memory
+    Runtime -->|MCP Protocol| Gateway
+    Runtime -->|Inference| Claude
+
+    %% Gateway → Lambda
+    Gateway -->|IAM SigV4| SearchLambda
+
+    %% API Gateway
+    PerfumeAPIGW --> AuthorizerLambda
+    AuthorizerLambda -->|検証| CognitoPool
+    PerfumeAPIGW --> CRUDLambda
+
+    %% Lambda → DynamoDB
+    SearchLambda --> PerfumeTable
+    CRUDLambda --> PerfumeTable
+
+    %% ファイル管理
+    ImageAPI --> ImagesDir
+    BackgroundAPI --> BackgroundsDir
+    ChatLogAPI --> Supabase
+
+%% ===========================================
+%% 認証フロー図
+%% ===========================================
+%% 注: このセクション以降は別ファイルとしてレンダリングしてください
+
+sequenceDiagram
+    actor User as ユーザー
+    participant Browser as ブラウザ
+    participant Middleware as Middleware
+    participant AuthAPI as AuthAPI
+    participant WebAuthnAPI as WebAuthnAPI
+    participant Cognito as Cognito
+    participant AgentCore as AgentCore
+
+    %% Basic認証
+    Note over User, Middleware: 1. Basic認証（全ページ）
+    User->>Browser: ページアクセス
+    Browser->>Middleware: リクエスト
+    alt Basic認証Cookie無し
+        Middleware-->>Browser: 401 + WWW-Authenticate
+        Browser->>User: 認証ダイアログ
+        User->>Browser: ユーザー名/パスワード
+        Browser->>Middleware: Authorization: Basic xxx
+        Middleware->>Middleware: 検証
+        Middleware-->>Browser: 200 + Set-Cookie: basic_auth_token
+    end
+
+    %% Admin認証
+    Note over User, AuthAPI: 2. Admin認証（管理画面）
+    User->>Browser: /admin/login アクセス
+    alt パスワード認証
+        User->>Browser: パスワード入力
+        Browser->>AuthAPI: POST /api/admin/auth
+        AuthAPI-->>Browser: 200 + Set-Cookie: admin_token
+    else WebAuthn認証
+        User->>Browser: TouchIDボタン
+        Browser->>WebAuthnAPI: POST /auth-options
+        WebAuthnAPI-->>Browser: Challenge
+        Browser->>User: 生体認証
+        User->>Browser: 認証完了
+        Browser->>WebAuthnAPI: POST /auth-verify
+        WebAuthnAPI-->>Browser: 200 + Set-Cookie: admin_token
+    end
+    Browser->>Browser: /admin/perfumes へリダイレクト
+
+    %% Cognito M2M
+    Note over Browser, AgentCore: 3. Cognito M2M（API間認証）
+    Browser->>AuthAPI: POST /api/ai/agentcore
+    AuthAPI->>Cognito: Client Credentials Grant
+    Cognito-->>AuthAPI: Access Token
+    AuthAPI->>AgentCore: Bearer Token
+    AgentCore-->>AuthAPI: Streaming Response
+    AuthAPI-->>Browser: Response
+
+%% ===========================================
+%% AIチャットフロー図
+%% ===========================================
+
+sequenceDiagram
+    actor User as ユーザー
+    participant Browser as ブラウザ
+    participant VRM as VRMアバター
+    participant API as AgentCoreAPI
+    participant Cognito as Cognito
+    participant Runtime as AgentCore
+    participant Gateway as MCPGateway
+    participant Lambda as perfume-search
+    participant DynamoDB as DynamoDB
+    participant Claude as Claude Haiku 4.5
+
+    User->>Browser: メッセージ入力
+    Browser->>API: POST /api/ai/agentcore
+
+    %% 認証
+    API->>Cognito: Client Credentials
+    Cognito-->>API: Access Token
+
+    %% AgentCore呼び出し
+    API->>Runtime: Invoke (Bearer Token)
+    Runtime->>Runtime: セッション復元
+    Runtime->>Claude: プロンプト送信
+
+    %% ツール使用判断
+    Claude-->>Runtime: Tool Call: search_perfumes
+    Runtime->>Gateway: MCP Request
+    Gateway->>Lambda: IAM SigV4
+    Lambda->>DynamoDB: Scan/Query
+    DynamoDB-->>Lambda: 結果
+    Lambda-->>Gateway: Response
+    Gateway-->>Runtime: Tool Result
+
+    %% 最終応答
+    Runtime->>Claude: Tool Result
+    Claude-->>Runtime: 最終応答
+
+    %% ストリーミング
+    loop ストリーミング
+        Runtime-->>API: Chunk
+        API-->>Browser: SSE
+        Browser->>VRM: 表情・ジェスチャー更新
+        VRM->>VRM: アニメーション再生
+    end
+
+    Browser->>User: チャット表示
+
+%% ===========================================
+%% VRMレンダリングフロー図
+%% ===========================================
+
+flowchart LR
+    subgraph Input["入力"]
+        VRMFile[VRMファイル]
+        VRMAFile[VRMAファイル]
+        ChatResponse[チャット応答]
+    end
+
+    subgraph Loader["ローダー"]
+        VRMLoader[VRMローダー]
+        AnimLoader[Animationローダー]
+    end
+
+    subgraph Model["モデル"]
+        VRMModel[VRMモデル]
+        Skeleton[スケルトン]
+        BlendShape[BlendShape]
+        SpringBone[SpringBone]
+    end
+
+    subgraph Controller["コントローラー"]
+        EmoteCtrl[EmoteController]
+        ExprCtrl[ExpressionController]
+        GestCtrl[GestureController]
+        BlinkCtrl[AutoBlink]
+        LookAtCtrl[AutoLookAt]
+        LipSync[LipSync]
+    end
+
+    subgraph Renderer["レンダラー"]
+        Scene[Three.js Scene]
+        Camera[PerspectiveCamera]
+        Lights[Lights]
+        WebGL[WebGLRenderer]
+    end
+
+    subgraph Output["出力"]
+        Canvas[Canvas]
+    end
+
+    VRMFile --> VRMLoader
+    VRMAFile --> AnimLoader
+    VRMLoader --> VRMModel
+    AnimLoader --> VRMModel
+
+    VRMModel --> Skeleton
+    VRMModel --> BlendShape
+    VRMModel --> SpringBone
+
+    ChatResponse --> EmoteCtrl
+    EmoteCtrl --> ExprCtrl
+    EmoteCtrl --> GestCtrl
+    EmoteCtrl --> BlinkCtrl
+    EmoteCtrl --> LookAtCtrl
+    EmoteCtrl --> LipSync
+
+    ExprCtrl --> BlendShape
+    GestCtrl --> Skeleton
+    BlinkCtrl --> BlendShape
+    LookAtCtrl --> Skeleton
+    LipSync --> BlendShape
+
+    VRMModel --> Scene
+    Camera --> Scene
+    Lights --> Scene
+    Scene --> WebGL
+    WebGL --> Canvas
+
+%% ===========================================
+%% データフロー図
+%% ===========================================
+
+flowchart TB
+    subgraph Frontend["フロントエンド"]
+        direction TB
+        AdminUI[管理画面 UI]
+        ChatUI[チャット UI]
+        SettingsStore[(Zustand Store)]
+    end
+
+    subgraph VercelAPI["Vercel API Routes"]
+        direction TB
+        PerfumeAdminAPI["api/admin/perfumes"]
+        AgentCoreAPIRoute["api/ai/agentcore"]
+        ImageUploadAPI["api/upload-image"]
+        BackgroundUploadAPI["api/upload-background"]
+        ChatLogSaveAPI["api/save-chat-log"]
+    end
+
+    subgraph VercelStorage["Vercel ファイルストレージ"]
+        direction TB
+        UploadedImages["public/images/uploaded"]
+        Backgrounds["public/backgrounds"]
+    end
+
+    subgraph AWS["AWS"]
+        direction TB
+
+        subgraph Storage["データストレージ"]
+            DDB[(DynamoDB)]
+        end
+
+        subgraph Compute["コンピュート"]
+            CRUDLambda2[perfume-crud]
+            SearchLambda2[perfume-search]
+        end
+
+        subgraph AI["AI"]
+            AgentCoreRT[AgentCore Runtime]
+            MCPGateway[MCP Gateway]
+            ClaudeModel[Claude Haiku 4.5]
+        end
+
+        subgraph Memory["メモリ"]
+            AgentCoreMem[(AgentCore Memory)]
+        end
+    end
+
+    subgraph External["外部サービス"]
+        SupabaseDB[(Supabase)]
+    end
+
+    %% 管理画面フロー
+    AdminUI -->|CRUD操作| PerfumeAdminAPI
+    PerfumeAdminAPI -->|Cognito M2M| CRUDLambda2
+    CRUDLambda2 -->|Read/Write| DDB
+
+    %% チャットフロー
+    ChatUI -->|メッセージ| AgentCoreAPIRoute
+    AgentCoreAPIRoute -->|Cognito M2M| AgentCoreRT
+    AgentCoreRT -->|Inference| ClaudeModel
+    AgentCoreRT -->|Tool Call| MCPGateway
+    MCPGateway --> SearchLambda2
+    SearchLambda2 -->|Query| DDB
+    AgentCoreRT <-->|Session| AgentCoreMem
+
+    %% ファイル管理フロー
+    ChatUI -->|画像アップロード| ImageUploadAPI
+    ImageUploadAPI --> UploadedImages
+    ChatUI -->|背景変更| BackgroundUploadAPI
+    BackgroundUploadAPI --> Backgrounds
+
+    %% チャットログ保存
+    ChatUI -->|ログ保存| ChatLogSaveAPI
+    ChatLogSaveAPI -->|オプション| SupabaseDB
+
+    %% 設定フロー
+    ChatUI <-->|設定保存| SettingsStore
+    AdminUI <-->|設定保存| SettingsStore
+
+%% ===========================================
+%% インフラ構成図
+%% ===========================================
+
+graph TB
+    subgraph VPC["AWS Cloud ap-northeast-1"]
+
+        subgraph Cognito["Amazon Cognito"]
+            UserPool[User Pool]
+            AppClient[App Client M2M]
+        end
+
+        subgraph AgentCore["Bedrock AgentCore"]
+            subgraph RuntimeSvc["Runtime"]
+                ScenseiAgent[scensei-xajQ0R77kv]
+            end
+            subgraph MemoryService["Memory"]
+                ScenseiMem[scensei_mem STM]
+            end
+            subgraph GatewayService["Gateway"]
+                ScenseiGW[scenseigateway MCP]
+            end
+        end
+
+        subgraph Bedrock["Amazon Bedrock"]
+            ClaudeHaiku[Claude Haiku 4.5]
+        end
+
+        subgraph LambdaService["AWS Lambda"]
+            PerfumeSearch[perfume-search]
+            PerfumeCRUD[perfume-crud]
+            APIAuth[api-authorizer]
+        end
+
+        subgraph APIGW["API Gateway"]
+            RestAPI[scensei-perfume-api]
+            PerfumesResource["perfumes CRUD"]
+        end
+
+        subgraph DynamoDBService["Amazon DynamoDB"]
+            PerfumesTable[(scensei-perfumes)]
+        end
+
+        subgraph IAM["IAM"]
+            RuntimeRole[AgentCore Execution Role]
+            LambdaRole[Lambda Execution Role]
+        end
+
+        subgraph CloudWatch["Amazon CloudWatch"]
+            RuntimeLogs[Runtime Logs]
+            LambdaLogs[Lambda Logs]
+            GatewayLogs[Gateway Logs]
+        end
+    end
+
+    %% 接続
+    UserPool --> AppClient
+
+    ScenseiAgent --> ScenseiMem
+    ScenseiAgent --> ScenseiGW
+    ScenseiAgent --> ClaudeHaiku
+    ScenseiAgent --> RuntimeRole
+
+    ScenseiGW --> PerfumeSearch
+
+    RestAPI --> APIAuth
+    RestAPI --> PerfumesResource
+    PerfumesResource --> PerfumeCRUD
+
+    APIAuth --> UserPool
+
+    PerfumeSearch --> PerfumesTable
+    PerfumeCRUD --> PerfumesTable
+
+    PerfumeSearch --> LambdaRole
+    PerfumeCRUD --> LambdaRole
+    APIAuth --> LambdaRole
+
+    ScenseiAgent -.-> RuntimeLogs
+    PerfumeSearch -.-> LambdaLogs
+    PerfumeCRUD -.-> LambdaLogs
+    ScenseiGW -.-> GatewayLogs
+
+%% ===========================================
+%% コンポーネント構成図
+%% ===========================================
+
+graph TB
+    subgraph Pages["Pages"]
+        IndexPage["index.tsx"]
+        AdminLogin["admin/login.tsx"]
+        AdminPerfumes["admin/perfumes.tsx"]
+        SendMessage["send-message.tsx"]
+    end
+
+    subgraph Components["Components"]
+        subgraph Common["common/"]
+            IconButton[IconButton]
+            MessageInputContainer[MessageInputContainer]
+            Tooltip[Tooltip]
+        end
+
+        subgraph Settings["settings/"]
+            SettingsPanel[SettingsPanel]
+            AITab[AI設定]
+            CharacterTab[キャラクター設定]
+            GeneralTab[一般設定]
+        end
+
+        subgraph Main["Main"]
+            VRMViewer[VRMViewer]
+            ChatLog[ChatLog]
+            MessageInput[MessageInput]
+            Form[Form]
+            Menu[Menu]
+            QuickMenu[QuickMenu]
+        end
+    end
+
+    subgraph Features["Features"]
+        subgraph Chat["chat/"]
+            AgentCoreChat[agentCoreChat]
+            VercelAIChat[vercelAIChat]
+            AIFactory[aiChatFactory]
+            Handlers[handlers]
+        end
+
+        subgraph VRMViewerFeature["vrmViewer/"]
+            Viewer[Viewer]
+            Model[Model]
+        end
+
+        subgraph VRMLib["lib/"]
+            VRMAnimation[VRMAnimation]
+            VRMLookAtSmoother[VRMLookAtSmootherLoaderPlugin]
+        end
+
+        subgraph Emote["emoteController/"]
+            EmoteController[EmoteController]
+            ExpressionCtrl[ExpressionController]
+            GestureCtrl[GestureController]
+            AutoBlink[AutoBlink]
+            AutoLookAt[AutoLookAt]
+        end
+
+        subgraph LipSyncFeature["lipSync/"]
+            LipSyncEngine[LipSync]
+        end
+
+        subgraph Messages["messages/"]
+            MessageHandler[messages]
+            SpeakCharacter[speakCharacter]
+            SpeakQueue[speakQueue]
+        end
+
+        subgraph Stores["stores/"]
+            SettingsStore2[settings]
+            HomeStore[home]
+            MenuStore[menu]
+            ToastStore[toast]
+            ImagesStore[images]
+        end
+    end
+
+    %% ページ → コンポーネント
+    IndexPage --> VRMViewer
+    IndexPage --> ChatLog
+    IndexPage --> MessageInput
+    IndexPage --> Menu
+    IndexPage --> QuickMenu
+    IndexPage --> SettingsPanel
+
+    AdminLogin --> IconButton
+    AdminPerfumes --> IconButton
+
+    %% コンポーネント → Features
+    VRMViewer --> Viewer
+    VRMViewer --> Model
+    VRMViewer --> EmoteController
+
+    %% VRM Libraries
+    Viewer --> VRMAnimation
+    Viewer --> VRMLookAtSmoother
+
+    MessageInput --> Form
+    MessageInput --> AIFactory
+
+    ChatLog --> MessageHandler
+
+    EmoteController --> ExpressionCtrl
+    EmoteController --> GestureCtrl
+    EmoteController --> AutoBlink
+    EmoteController --> AutoLookAt
+    EmoteController --> LipSyncEngine
+
+    AIFactory --> AgentCoreChat
+    AIFactory --> VercelAIChat
+
+    %% Stores
+    SettingsPanel --> SettingsStore2
+    Menu --> MenuStore
+    ChatLog --> HomeStore
