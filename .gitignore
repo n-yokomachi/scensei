@@ -70,7 +70,6 @@ public/scripts/*
 # AgentCore CLI generated files
 agentcore/.agentcore_identity_*
 agentcore/.bedrock_agentcore/
-agentcore/.bedrock_agentcore.yaml
 
 # Python
 agentcore/.venv/
