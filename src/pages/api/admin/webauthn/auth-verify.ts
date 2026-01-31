@@ -51,8 +51,8 @@ export default async function handler(
       const isProduction = process.env.NODE_ENV === 'production'
       // チャレンジCookieを削除し、認証Cookieを設定
       res.setHeader('Set-Cookie', [
-        'webauthn-challenge=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0',
-        `admin_token=${adminPassword}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${60 * 60 * 24}${isProduction ? '; Secure' : ''}`,
+        'webauthn-challenge=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0',
+        `admin_token=${adminPassword}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24}${isProduction ? '; Secure' : ''}`,
       ])
 
       return res.status(200).json({

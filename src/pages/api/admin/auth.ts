@@ -49,7 +49,7 @@ export default async function handler(
       serialize(COOKIE_NAME, ADMIN_PASSWORD, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: COOKIE_MAX_AGE,
         path: '/',
       })
@@ -64,7 +64,7 @@ export default async function handler(
       serialize(COOKIE_NAME, '', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: 0,
         path: '/',
       })
