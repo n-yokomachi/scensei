@@ -33,6 +33,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Basic認証済みCookieがあればスキップ
+  const basicAuthToken = request.cookies.get('basic_auth_token')?.value
+  if (basicAuthToken === 'authenticated') {
+    return NextResponse.next()
+  }
+
   const authHeader = request.headers.get('authorization')
 
   if (authHeader) {
@@ -43,7 +49,15 @@ export function middleware(request: NextRequest) {
       const [user, pass] = decoded.split(':')
 
       if (user === username && pass === password) {
-        return NextResponse.next()
+        // 認証成功時にCookieを設定
+        const response = NextResponse.next()
+        response.cookies.set('basic_auth_token', 'authenticated', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+        })
+        return response
       }
     }
   }
