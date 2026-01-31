@@ -157,9 +157,7 @@ const Based = () => {
             }}
             disabled={isLoading || isUploading}
           >
-            <option value="/backgrounds/bg-c.png">
-              {t('DefaultBackground')}
-            </option>
+            <option value="">{t('DefaultBackground')}</option>
             <option value="green">{t('GreenBackground')}</option>
             {backgroundFiles.map((file) => (
               <option key={file} value={`/backgrounds/${file}`}>

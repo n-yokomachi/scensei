@@ -5,7 +5,7 @@
   "general": {
     "language": "ja",
     "changeEnglishToJapanese": false,
-    "backgroundImagePath": "/backgrounds/bg-c.png",
+    "backgroundImagePath": "",
     "showAssistantText": true,
     "showCharacterName": true,
     "showControlPanel": true,
