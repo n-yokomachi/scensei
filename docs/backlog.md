@@ -70,7 +70,7 @@ PRレビューで発見した、後回しにする課題を記載する。
 ### バックエンドのユニットテスト追加
 
 - **発見**: Phase5 PR#6 レビュー
-- **内容**: `backend/tests/__init__.py`が空で、ユニットテストがない
+- **内容**: `agentcore/tests/__init__.py`が空で、ユニットテストがない
 - **対応案**: Strands Agentsのテスト方法に従いテストを追加
 
 ### agentcore.tsの変数宣言修正
@@ -85,6 +85,27 @@ PRレビューで発見した、後回しにする課題を記載する。
 - **内容**: `strands-agents-tools`パッケージがAgentCoreランタイムで利用不可（`ModuleNotFoundError`）
 - **現状**: 一時的に無効化し、システムプロンプトでLLMの知識に基づく提案を指示
 - **対応案**: AgentCoreがstrands-agents-toolsをサポートした時点で再有効化
+
+### CORS設定の制限
+
+- **発見**: Phase8 PR#10 レビュー
+- **内容**: API GatewayのCORS設定が`ALL_ORIGINS`で緩すぎる
+- **ファイル**: `infra/lib/scensei-stack.ts:91`
+- **対応案**: 本番環境では特定のオリジン（Vercelドメイン等）に制限
+
+### COGNITO_REGIONのハードコード
+
+- **発見**: Phase8 PR#10 レビュー
+- **内容**: Lambda AuthorizerのCOGNITO_REGIONが`'ap-northeast-1'`でハードコード
+- **ファイル**: `infra/lib/scensei-stack.ts:79`
+- **対応案**: cdk.jsonのcontextから取得、または`this.region`を使用
+
+### Gateway URLのハードコード
+
+- **発見**: Phase8 PR#10 レビュー
+- **内容**: エージェントのGateway URLがソースコードにハードコードされている
+- **ファイル**: `agentcore/src/agent/scensei_agent.py:17`
+- **対応案**: `config/agentcore.json`に移動して一元管理
 
 ---
 
