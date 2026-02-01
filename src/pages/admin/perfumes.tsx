@@ -260,7 +260,31 @@ export default function AdminPerfumes() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-600">読み込み中...</div>
+        <div className="flex gap-2">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-3 h-3 rounded-full bg-secondary"
+              style={{
+                animation: 'bounce 0.6s ease-in-out infinite',
+                animationDelay: `${i * 0.15}s`,
+              }}
+            />
+          ))}
+        </div>
+        <style jsx>{`
+          @keyframes bounce {
+            0%,
+            100% {
+              transform: translateY(0) scale(1);
+              opacity: 0.7;
+            }
+            50% {
+              transform: translateY(-12px) scale(1.1);
+              opacity: 1;
+            }
+          }
+        `}</style>
       </div>
     )
   }
