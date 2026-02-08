@@ -1,14 +1,13 @@
 import settingsStore from '@/features/stores/settings'
+import { PRESET_QUESTIONS } from '@/features/constants/presetQuestions'
 
 export const AssistantText = ({ message }: { message: string }) => {
   const characterName = settingsStore((s) => s.characterName)
   const showCharacterName = settingsStore((s) => s.showCharacterName)
   const showPresetQuestions = settingsStore((s) => s.showPresetQuestions)
-  const presetQuestions = settingsStore((s) => s.presetQuestions)
 
-  // Check if preset questions should be shown AND there are actual questions
   const shouldShowPresetQuestions =
-    showPresetQuestions && presetQuestions.length > 0
+    showPresetQuestions && PRESET_QUESTIONS.length > 0
 
   return (
     <div

@@ -65,13 +65,6 @@ interface Character {
   lightingIntensity: number
 }
 
-// Preset question type
-export interface PresetQuestion {
-  id: string
-  text: string
-  order: number
-}
-
 interface General {
   selectLanguage: Language
   changeEnglishToJapanese: boolean
@@ -87,7 +80,6 @@ interface General {
   useVideoAsBackground: boolean
   temperature: number
   maxTokens: number
-  presetQuestions: PresetQuestion[]
   showPresetQuestions: boolean
   chatLogWidth: number
   imageDisplayPosition: 'input' | 'side' | 'icon'
@@ -175,11 +167,6 @@ const getInitialValuesFromEnv = (): SettingsState => {
     useVideoAsBackground: config.general.useVideoAsBackground,
     temperature: config.ai.temperature,
     maxTokens: config.ai.maxTokens,
-    presetQuestions: config.general.presetQuestions.map((text, index) => ({
-      id: `preset-question-${index}`,
-      text: text.trim(),
-      order: index,
-    })),
     showPresetQuestions: config.general.showPresetQuestions,
     chatLogWidth: config.general.chatLogWidth,
     imageDisplayPosition: config.multiModal.imageDisplayPosition as
@@ -275,7 +262,6 @@ const settingsStore = create<SettingsState>()(
       showQuickMenu: state.showQuickMenu,
       temperature: state.temperature,
       maxTokens: state.maxTokens,
-      presetQuestions: state.presetQuestions,
       showPresetQuestions: state.showPresetQuestions,
       customApiUrl: state.customApiUrl,
       customApiHeaders: state.customApiHeaders,
