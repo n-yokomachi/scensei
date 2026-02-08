@@ -14,7 +14,7 @@
     "includeTimestampInUserMessage": false,
     "externalLinkageMode": false,
     "messageReceiverEnabled": false,
-    "showPresetQuestions": false,
+    "showPresetQuestions": true,
     "presetQuestions": [],
     "chatLogWidth": 400
   },
