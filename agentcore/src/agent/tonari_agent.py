@@ -21,7 +21,7 @@ from .prompts import TONARI_SYSTEM_PROMPT
 DEFAULT_MEMORY_ID = "tonari_mem-SZ0n7JG0K4"
 
 # Gateway設定（IAM認証を使用）
-DEFAULT_GATEWAY_URL = "https://tonarigateway-9o3zpwx4lj.gateway.bedrock-agentcore.ap-northeast-1.amazonaws.com/mcp"
+DEFAULT_GATEWAY_URL = "https://tonarigateway-0xt6t3ccxy.gateway.bedrock-agentcore.ap-northeast-1.amazonaws.com/mcp"
 
 
 def create_mcp_client(gateway_url: str, region: str) -> MCPClient:
