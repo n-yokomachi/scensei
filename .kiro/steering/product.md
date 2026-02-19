@@ -32,7 +32,7 @@ Tonari（トナリ）は、パーソナルAIアシスタントを実装したWeb
 - **Phase 1-8**: 完了（環境構築、UIテーマ、3Dアバター、UI/UX改善、AgentCoreバックエンド、Memory統合、応答品質・ジェスチャー、認証基盤）
 - **Web検索**: Tavily統合完了
 - **プリセット質問ボタン**: 実装完了
-- **リネーム**: Scensei → Tonari 進行中
+- **リネーム**: Scensei → Tonari 完了（Runtime ARNのみ旧名残存）
 
 ## Stakeholders
 
