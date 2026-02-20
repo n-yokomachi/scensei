@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. (P) フロントエンドのactorIdをオーナー固定値に変更
+- [x] 1. (P) フロントエンドのactorIdをオーナー固定値に変更
   - `getActorId()`関数を固定文字列`tonari-owner`を返却するように変更する
   - `localStorage`によるランダムUUID生成・保存ロジックを削除する
   - `getSessionId()`関数はSTMの会話コンテキスト管理に必要なため変更しない
@@ -8,7 +8,7 @@
   - _Requirements: 1.1, 1.2_
   - _Contracts: OwnerActorId_
 
-- [ ] 2. (P) バックエンドのretrieval_configをクロスセッション対応に拡張
+- [x] 2. (P) バックエンドのretrieval_configをクロスセッション対応に拡張
   - `AgentCoreMemoryConfig`の`retrieval_config`を3つのnamespace prefixから5つに拡張する
   - 既存のpreferences・factsのnamespaceキー末尾に`/`を追加する（プレフィックス衝突防止）
   - summariesの取得prefixから`{sessionId}`を除外し、`/summaries/{actorId}/`にすることで全セッション横断取得を実現する
@@ -18,7 +18,7 @@
   - _Requirements: 1.3, 2.2, 2.3, 3.2, 3.3, 4.2, 4.3, 5.2, 5.4_
   - _Contracts: RetrievalConfig Service Interface_
 
-- [ ] 3. (P) AgentCore MemoryリソースにLTM 4ストラテジーを設定
+- [x] 3. (P) AgentCore MemoryリソースにLTM 4ストラテジーを設定
   - 既存メモリリソース`tonari_mem-SZ0n7JG0K4`に`aws bedrock-agentcore-control update-memory`で4つのLTMストラテジーを追加する
   - Semanticストラテジー: 事実情報の自動抽出、namespace `/facts/{actorId}/`
   - User Preferenceストラテジー: 好み・嗜好の自動学習、namespace `/preferences/{actorId}/`
@@ -28,7 +28,7 @@
   - _Requirements: 2.1, 3.1, 4.1, 5.1, 5.3_
   - _Contracts: MemoryStrategies API Contract_
 
-- [ ] 4. ビルド検証
+- [x] 4. ビルド検証
   - `npm run build`でフロントエンドのビルドが成功することを確認する
   - ビルドエラーがある場合はPrettier/ESLintで修正する
   - _Requirements: 1.1, 1.2_
