@@ -7,6 +7,7 @@ from unittest.mock import patch, MagicMock
 from tweet_fetcher import OwnerTweet
 from agentcore_invoker import (
     invoke_tonari_for_tweet,
+    notify_tweet_posted,
     _build_prompt,
     _parse_sse_response,
     _get_cognito_token,
@@ -24,16 +25,19 @@ class TestBuildPrompt(unittest.TestCase):
         ]
         prompt = _build_prompt(tweets)
 
+        self.assertIn("@tonari_with", prompt)
+        self.assertIn("@_cityside", prompt)
         self.assertIn("Today is sunny!", prompt)
         self.assertIn("Coffee time", prompt)
         self.assertIn("140文字以内", prompt)
         self.assertIn("感情タグ", prompt)
 
     def test_cute_mode_without_owner_tweets(self):
-        """オーナーのツイートがない場合、可愛い系モードのプロンプトを生成する。"""
+        """オーナーのツイートがない場合、自由投稿モードのプロンプトを生成する。"""
         prompt = _build_prompt([])
 
-        self.assertIn("可愛い系", prompt)
+        self.assertIn("@tonari_with", prompt)
+        self.assertIn("投稿はありません", prompt)
         self.assertIn("140文字以内", prompt)
         self.assertIn("センシティブ", prompt)
 
@@ -198,6 +202,48 @@ class TestInvokeTonariForTweet(unittest.TestCase):
         )
 
         self.assertIsNone(result)
+
+
+class TestNotifyTweetPosted(unittest.TestCase):
+    """Tests for the tweet post notification function."""
+
+    @patch("agentcore_invoker._call_agentcore")
+    @patch("agentcore_invoker._get_cognito_token")
+    def test_sends_notification_with_tweet_text(self, mock_token, mock_call):
+        """投稿内容を含む通知がAgentCoreに送信される。"""
+        mock_token.return_value = "test-token"
+        mock_call.return_value = "了解"
+
+        notify_tweet_posted(
+            tweet_text="今日はいい天気ですね",
+            cognito_client_id="cid",
+            cognito_client_secret="csecret",
+            cognito_token_endpoint="https://example.com/token",
+            cognito_scope="scope",
+            runtime_arn="arn:aws:test",
+            region="ap-northeast-1",
+        )
+
+        mock_call.assert_called_once()
+        prompt = mock_call.call_args[0][0]
+        self.assertIn("今日はいい天気ですね", prompt)
+        self.assertIn("@tonari_with", prompt)
+
+    @patch("agentcore_invoker._call_agentcore")
+    @patch("agentcore_invoker._get_cognito_token")
+    def test_does_not_raise_on_failure(self, mock_token, mock_call):
+        """通知失敗時も例外を送出しない。"""
+        mock_token.side_effect = Exception("Auth failed")
+
+        notify_tweet_posted(
+            tweet_text="テスト",
+            cognito_client_id="cid",
+            cognito_client_secret="csecret",
+            cognito_token_endpoint="https://example.com/token",
+            cognito_scope="scope",
+            runtime_arn="arn:aws:test",
+            region="ap-northeast-1",
+        )
 
 
 if __name__ == "__main__":
